@@ -119,6 +119,14 @@ export default function App() {
               issue={fieldIssue(bridge.issues, "speakerVolume")}
               onChange={(value) => bridge.setDraftField("speakerVolume", value)}
             />
+            <IntegerControl
+              label="Inactive time"
+              value={bridge.draft.inactiveTime}
+              min={10}
+              max={60}
+              issue={fieldIssue(bridge.issues, "inactiveTime")}
+              onChange={(value) => bridge.setDraftField("inactiveTime", value)}
+            />
             <ToggleControl
               label="Disable inactive disconnect"
               value={bridge.draft.disableInactiveDisconnect}

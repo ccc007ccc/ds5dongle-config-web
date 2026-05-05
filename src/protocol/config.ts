@@ -1,4 +1,4 @@
-export const CONFIG_BODY_SIZE = 13;
+export const CONFIG_BODY_SIZE = 14;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
@@ -7,6 +7,7 @@ export type ControllerMode = 0 | 1;
 export interface ConfigBody {
   hapticsGain: number;
   speakerVolume: number;
+  inactiveTime: number;
   disableInactiveDisconnect: boolean;
   disablePicoLed: boolean;
   pollingRateMode: PollingRateMode;
@@ -22,6 +23,7 @@ export interface ConfigValidationIssue {
 export const DEFAULT_CONFIG: ConfigBody = {
   hapticsGain: 1,
   speakerVolume: 2,
+  inactiveTime: 10,
   disableInactiveDisconnect: false,
   disablePicoLed: false,
   pollingRateMode: 0,
@@ -35,7 +37,7 @@ export const POLLING_RATE_OPTIONS: Array<{
 }> = [
   { value: 0, label: "250 Hz" },
   { value: 1, label: "500 Hz" },
-  { value: 2, label: "Instant" },
+  { value: 2, label: "Real-Time" },
 ];
 
 export const CONTROLLER_MODE_OPTIONS: Array<{
@@ -74,11 +76,12 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   const view = new DataView(bytes.buffer);
   view.setFloat32(0, config.hapticsGain, true);
   view.setFloat32(4, config.speakerVolume, true);
-  view.setUint8(8, config.disableInactiveDisconnect ? 1 : 0);
-  view.setUint8(9, config.disablePicoLed ? 1 : 0);
-  view.setUint8(10, config.pollingRateMode);
-  view.setUint8(11, config.hapticsBufferLength);
-  view.setUint8(12, config.controllerMode);
+  view.setUint8(8, config.inactiveTime);
+  view.setUint8(9, config.disableInactiveDisconnect ? 1 : 0);
+  view.setUint8(10, config.disablePicoLed ? 1 : 0);
+  view.setUint8(11, config.pollingRateMode);
+  view.setUint8(12, config.hapticsBufferLength);
+  view.setUint8(13, config.controllerMode);
   return bytes;
 }
 
@@ -91,6 +94,10 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
 
   if (!Number.isFinite(config.speakerVolume) || config.speakerVolume < 1 || config.speakerVolume > 2) {
     issues.push({ field: "speakerVolume", message: "Speaker volume must be between 1.0 and 2.0" });
+  }
+
+  if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 10 || config.inactiveTime > 60) {
+    issues.push({ field: "inactiveTime", message: "Inactive time must be between 10 and 60 minutes" });
   }
 
   if (!Number.isInteger(config.pollingRateMode) || config.pollingRateMode < 0 || config.pollingRateMode > 2) {
@@ -116,6 +123,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
   return {
     hapticsGain: roundToStep(config.hapticsGain, 0.01),
     speakerVolume: roundToStep(config.speakerVolume, 0.01),
+    inactiveTime: clampInteger(config.inactiveTime, 10, 60),
     disableInactiveDisconnect: Boolean(config.disableInactiveDisconnect),
     disablePicoLed: Boolean(config.disablePicoLed),
     pollingRateMode: clampInteger(config.pollingRateMode, 0, 2) as PollingRateMode,
@@ -132,6 +140,7 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
   return (
     Math.abs(left.hapticsGain - right.hapticsGain) < 0.001 &&
     Math.abs(left.speakerVolume - right.speakerVolume) < 0.001 &&
+    left.inactiveTime === right.inactiveTime &&
     left.disableInactiveDisconnect === right.disableInactiveDisconnect &&
     left.disablePicoLed === right.disablePicoLed &&
     left.pollingRateMode === right.pollingRateMode &&
@@ -156,11 +165,12 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
   return {
     hapticsGain: view.getFloat32(0, true),
     speakerVolume: view.getFloat32(4, true),
-    disableInactiveDisconnect: view.getUint8(8) === 1,
-    disablePicoLed: view.getUint8(9) === 1,
-    pollingRateMode: view.getUint8(10) as PollingRateMode,
-    hapticsBufferLength: view.getUint8(11),
-    controllerMode: view.getUint8(12) as ControllerMode,
+    inactiveTime: view.getUint8(8),
+    disableInactiveDisconnect: view.getUint8(9) === 1,
+    disablePicoLed: view.getUint8(10) === 1,
+    pollingRateMode: view.getUint8(11) as PollingRateMode,
+    hapticsBufferLength: view.getUint8(12),
+    controllerMode: view.getUint8(13) as ControllerMode,
   };
 }
 
