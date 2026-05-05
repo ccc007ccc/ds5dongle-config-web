@@ -1,4 +1,6 @@
 import { ChangeEvent } from "react";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { ConfigValidationIssue } from "../../protocol/config";
 
 interface FloatControlProps {
@@ -19,6 +21,12 @@ export function FloatControl({ label, value, min, max, step, issue, onChange }: 
     }
   };
 
+  const handleSliderChange = ([next]: number[]) => {
+    if (Number.isFinite(next)) {
+      onChange(next);
+    }
+  };
+
   return (
     <label className={`control-row ${issue ? "invalid" : ""}`}>
       <span>
@@ -26,8 +34,17 @@ export function FloatControl({ label, value, min, max, step, issue, onChange }: 
         {issue && <small>{issue.message}</small>}
       </span>
       <div className="range-inputs">
-        <input type="range" min={min} max={max} step={step} value={value} onChange={handleChange} />
-        <input type="number" min={min} max={max} step={step} value={value.toFixed(2)} onChange={handleChange} />
+        <Slider min={min} max={max} step={step} value={[value]} onValueChange={handleSliderChange} />
+        <Input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={value.toFixed(2)}
+          onChange={handleChange}
+          aria-invalid={Boolean(issue)}
+          className="font-bold"
+        />
       </div>
     </label>
   );

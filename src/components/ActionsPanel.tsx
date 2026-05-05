@@ -1,4 +1,5 @@
 import { Download, Power, RefreshCw, RotateCcw, Save, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
 
 interface ActionsPanelProps {
@@ -16,56 +17,59 @@ export function ActionsPanel({ bridge, hasIssues, isBusy }: ActionsPanelProps) {
       </div>
 
       <div className="action-stack">
-        <button
+        <Button
           type="button"
-          className="button secondary wide"
+          variant="outline"
+          className="w-full"
           onClick={bridge.readConfig}
           disabled={!bridge.client || isBusy}
           title="Read current config from report 0xF7"
         >
           <RefreshCw size={17} />
           Read
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="button primary wide"
+          className="w-full"
           onClick={bridge.applyConfig}
           disabled={!bridge.client || isBusy || !bridge.isDirty || hasIssues}
           title="Send command 0x01 through report 0xF6"
         >
           <Send size={17} />
           Apply to Device
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="button success wide"
+          className="w-full bg-blue-600 text-white hover:bg-blue-700"
           onClick={bridge.saveToFlash}
           disabled={!bridge.client || isBusy || bridge.isDirty}
           title={bridge.isDirty ? "Apply changes before saving" : "Send command 0x02 through report 0xF6"}
         >
           <Save size={17} />
           Save to Flash
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="button secondary wide"
+          variant="outline"
+          className="w-full"
           onClick={bridge.reconnectUsb}
           disabled={!bridge.client || isBusy}
           title="Send command 0x03 through report 0xF6"
         >
           <Power size={17} />
           Reconnect USB
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="button ghost wide"
+          variant="ghost"
+          className="w-full"
           onClick={bridge.resetDraft}
           disabled={!bridge.config || isBusy || !bridge.isDirty}
           title="Restore the last config read or applied"
         >
           <RotateCcw size={17} />
           Reset Edits
-        </button>
+        </Button>
       </div>
 
       <div className="state-box">

@@ -1,4 +1,5 @@
 import { Power, Usb } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DeviceStripProps {
   authorizedDevices: HIDDevice[];
@@ -32,27 +33,26 @@ export function DeviceStrip({
       </div>
       <div className="device-actions">
         {authorizedDevices.length > 0 && !client && (
-          <button
+          <Button
             type="button"
-            className="button secondary"
+            variant="outline"
             onClick={() => onConnectAuthorized(authorizedDevices[0])}
             disabled={isBusy}
             title="Open the first previously authorized device"
           >
             <Power size={17} />
             Open
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="button"
-          className="button primary"
           onClick={onConnect}
           disabled={!supported || isBusy}
           title="Choose a DS5 Bridge HID device"
         >
           <Usb size={17} />
           Connect
-        </button>
+        </Button>
       </div>
     </section>
   );

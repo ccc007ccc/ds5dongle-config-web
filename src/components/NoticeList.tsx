@@ -1,24 +1,12 @@
 import { AlertCircle } from "lucide-react";
 
 interface NoticeListProps {
-  error: string | null;
   supported: boolean;
-  onClearError: () => void;
 }
 
-export function NoticeList({ error, supported, onClearError }: NoticeListProps) {
+export function NoticeList({ supported }: NoticeListProps) {
   return (
     <>
-      {error && (
-        <div className="notice error" role="alert">
-          <AlertCircle size={18} />
-          <span>{error}</span>
-          <button type="button" onClick={onClearError}>
-            Dismiss
-          </button>
-        </div>
-      )}
-
       {!supported && (
         <div className="notice warning">
           <AlertCircle size={18} />

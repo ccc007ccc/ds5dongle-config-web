@@ -1,3 +1,5 @@
+import { Switch } from "@/components/ui/switch";
+
 interface ToggleControlProps {
   label: string;
   value: boolean;
@@ -8,16 +10,12 @@ export function ToggleControl({ label, value, onChange }: ToggleControlProps) {
   return (
     <div className="control-row toggle-row">
       <strong>{label}</strong>
-      <button
-        type="button"
-        className={`switch ${value ? "on" : ""}`}
-        role="switch"
-        aria-checked={value}
-        onClick={() => onChange(!value)}
+      <Switch
+        checked={value}
+        onCheckedChange={onChange}
+        className="justify-self-end"
         title={value ? "Enabled" : "Disabled"}
-      >
-        <span />
-      </button>
+      />
     </div>
   );
 }
