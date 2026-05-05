@@ -295,6 +295,10 @@ input[type="number"] {
   border-radius: 8px;
 }
 
+.segmented-control.two-options {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .segmented-control button {
   min-height: 36px;
   color: #526070;
@@ -431,7 +435,8 @@ input[type="number"] {
     grid-template-columns: 1fr;
   }
 
-  .segmented-control {
+  .segmented-control,
+  .segmented-control.two-options {
     grid-template-columns: 1fr;
   }
 

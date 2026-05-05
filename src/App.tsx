@@ -15,6 +15,8 @@ import { useDs5Bridge } from "./hooks/useDs5Bridge";
 import {
   ConfigBody,
   ConfigValidationIssue,
+  CONTROLLER_MODE_OPTIONS,
+  ControllerMode,
   POLLING_RATE_OPTIONS,
   PollingRateMode,
   fieldIssue,
@@ -138,6 +140,10 @@ export default function App() {
               max={255}
               issue={fieldIssue(bridge.issues, "hapticsBufferLength")}
               onChange={(value) => bridge.setDraftField("hapticsBufferLength", value)}
+            />
+            <ControllerModeControl
+              value={bridge.draft.controllerMode}
+              onChange={(value) => bridge.setDraftField("controllerMode", value)}
             />
           </div>
         </section>
@@ -316,6 +322,32 @@ function PollingRateControl({ value, onChange }: PollingRateControlProps) {
       <strong>Polling rate mode</strong>
       <div className="segmented-control" role="group" aria-label="Polling rate mode">
         {POLLING_RATE_OPTIONS.map((option) => (
+          <button
+            type="button"
+            key={option.value}
+            className={option.value === value ? "selected" : ""}
+            onClick={() => onChange(option.value)}
+            aria-pressed={option.value === value}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface ControllerModeControlProps {
+  value: ControllerMode;
+  onChange: (value: ControllerMode) => void;
+}
+
+function ControllerModeControl({ value, onChange }: ControllerModeControlProps) {
+  return (
+    <div className="control-row">
+      <strong>Controller mode</strong>
+      <div className="segmented-control two-options" role="group" aria-label="Controller mode">
+        {CONTROLLER_MODE_OPTIONS.map((option) => (
           <button
             type="button"
             key={option.value}

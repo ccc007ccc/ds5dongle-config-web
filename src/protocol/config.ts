@@ -1,7 +1,8 @@
-export const CONFIG_BODY_SIZE = 12;
+export const CONFIG_BODY_SIZE = 13;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
+export type ControllerMode = 0 | 1;
 
 export interface ConfigBody {
   hapticsGain: number;
@@ -10,6 +11,7 @@ export interface ConfigBody {
   disablePicoLed: boolean;
   pollingRateMode: PollingRateMode;
   hapticsBufferLength: number;
+  controllerMode: ControllerMode;
 }
 
 export interface ConfigValidationIssue {
@@ -24,6 +26,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   disablePicoLed: false,
   pollingRateMode: 0,
   hapticsBufferLength: 48,
+  controllerMode: 0,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{
@@ -33,6 +36,14 @@ export const POLLING_RATE_OPTIONS: Array<{
   { value: 0, label: "250 Hz" },
   { value: 1, label: "500 Hz" },
   { value: 2, label: "Instant" },
+];
+
+export const CONTROLLER_MODE_OPTIONS: Array<{
+  value: ControllerMode;
+  label: string;
+}> = [
+  { value: 0, label: "DS5" },
+  { value: 1, label: "DSE" },
 ];
 
 export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): ConfigBody {
@@ -67,6 +78,7 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(9, config.disablePicoLed ? 1 : 0);
   view.setUint8(10, config.pollingRateMode);
   view.setUint8(11, config.hapticsBufferLength);
+  view.setUint8(12, config.controllerMode);
   return bytes;
 }
 
@@ -93,6 +105,10 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
     issues.push({ field: "hapticsBufferLength", message: "Haptics buffer length must be between 16 and 255" });
   }
 
+  if (!Number.isInteger(config.controllerMode) || config.controllerMode < 0 || config.controllerMode > 1) {
+    issues.push({ field: "controllerMode", message: "Controller mode must be DS5 or DSE" });
+  }
+
   return issues;
 }
 
@@ -104,6 +120,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     disablePicoLed: Boolean(config.disablePicoLed),
     pollingRateMode: clampInteger(config.pollingRateMode, 0, 2) as PollingRateMode,
     hapticsBufferLength: clampInteger(config.hapticsBufferLength, 16, 255),
+    controllerMode: clampInteger(config.controllerMode, 0, 1) as ControllerMode,
   };
 }
 
@@ -118,7 +135,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.disableInactiveDisconnect === right.disableInactiveDisconnect &&
     left.disablePicoLed === right.disablePicoLed &&
     left.pollingRateMode === right.pollingRateMode &&
-    left.hapticsBufferLength === right.hapticsBufferLength
+    left.hapticsBufferLength === right.hapticsBufferLength &&
+    left.controllerMode === right.controllerMode
   );
 }
 
@@ -142,6 +160,7 @@ function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {
     disablePicoLed: view.getUint8(9) === 1,
     pollingRateMode: view.getUint8(10) as PollingRateMode,
     hapticsBufferLength: view.getUint8(11),
+    controllerMode: view.getUint8(12) as ControllerMode,
   };
 }
 
