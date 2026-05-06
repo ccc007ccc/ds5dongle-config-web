@@ -30,6 +30,14 @@ export const zh = {
   notice: {
     webHidUnsupported: "WebHID 仅在基于 Chromium 的浏览器与安全来源中可用。",
   },
+  pwa: {
+    offlineReady: "网页已缓存，可离线访问",
+    cacheRefresh: "检测到新版本，正在更新网页缓存",
+  },
+  footer: {
+    title: "Pico2W DualSense 5 Bridge",
+    description: "用于网页设置驱动：将 Raspberry Pi Pico2W 作为 DualSense (DS5) 控制器的无线适配器。",
+  },
   device: {
     label: "设备",
     open: "打开",
@@ -39,6 +47,16 @@ export const zh = {
   },
   config: {
     title: "配置",
+    sections: {
+      feedback: "反馈输出",
+      feedbackDescription: "调整手柄触觉、扬声器与触觉缓冲。",
+      power: "电源与指示",
+      powerDescription: "控制闲置断连与 Pico LED 行为。",
+      performance: "性能",
+      performanceDescription: "选择 HID 上报的轮询节奏。",
+      compatibility: "兼容性",
+      compatibilityDescription: "切换控制器识别模式。",
+    },
     hapticsGain: "触觉增益",
     speakerVolume: "扬声器音量",
     inactiveTime: "闲置时间",
@@ -84,6 +102,7 @@ export const zh = {
   errors: {
     invalidConfig: "设备返回了无效配置：{{issues}}",
     invalidBytes: "设备返回了 {{count}} 字节，期望至少 {{expected}} 字节",
+    noDeviceSelected: "未选择 DS5 Bridge 设备",
     unexpectedWebHid: "未知 WebHID 错误",
     disconnected: "设备已断开连接",
   },

@@ -17,7 +17,6 @@ export interface ConfigBody {
 
 export interface ConfigValidationIssue {
   field: keyof ConfigBody;
-  message: string;
 }
 
 export const DEFAULT_CONFIG: ConfigBody = {
@@ -59,17 +58,23 @@ export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): C
   }
 
   if (parsed[0]) {
-    const issues = validateConfig(parsed[0]).map((issue) => issue.message).join("; ");
-    throw new Error(`Device returned invalid config: ${issues}`);
+    throw new ConfigDecodeError("invalidConfig", {
+      issues: validateConfig(parsed[0]).map((issue) => issue.field),
+    });
   }
 
-  throw new Error(`Device returned ${bytes.byteLength} bytes, expected at least ${CONFIG_BODY_SIZE}`);
+  throw new ConfigDecodeError("invalidBytes", {
+    count: bytes.byteLength,
+    expected: CONFIG_BODY_SIZE,
+  });
 }
 
 export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   const issues = validateConfig(config);
   if (issues.length > 0) {
-    throw new Error(issues.map((issue) => issue.message).join("; "));
+    throw new ConfigDecodeError("invalidConfig", {
+      issues: issues.map((issue) => issue.field),
+    });
   }
 
   const bytes = new Uint8Array(new ArrayBuffer(CONFIG_BODY_SIZE));
@@ -89,19 +94,19 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   const issues: ConfigValidationIssue[] = [];
 
   if (!Number.isFinite(config.hapticsGain) || config.hapticsGain < 1 || config.hapticsGain > 2) {
-    issues.push({ field: "hapticsGain", message: "Haptics gain must be between 1.0 and 2.0" });
+    issues.push({ field: "hapticsGain" });
   }
 
   if (!Number.isFinite(config.speakerVolume) || config.speakerVolume < 1 || config.speakerVolume > 2) {
-    issues.push({ field: "speakerVolume", message: "Speaker volume must be between 1.0 and 2.0" });
+    issues.push({ field: "speakerVolume" });
   }
 
   if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 10 || config.inactiveTime > 60) {
-    issues.push({ field: "inactiveTime", message: "Inactive time must be between 10 and 60 minutes" });
+    issues.push({ field: "inactiveTime" });
   }
 
   if (!Number.isInteger(config.pollingRateMode) || config.pollingRateMode < 0 || config.pollingRateMode > 2) {
-    issues.push({ field: "pollingRateMode", message: "Polling rate mode must be 0, 1, or 2" });
+    issues.push({ field: "pollingRateMode" });
   }
 
   if (
@@ -109,11 +114,11 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
     config.hapticsBufferLength < 16 ||
     config.hapticsBufferLength > 255
   ) {
-    issues.push({ field: "hapticsBufferLength", message: "Haptics buffer length must be between 16 and 255" });
+    issues.push({ field: "hapticsBufferLength" });
   }
 
   if (!Number.isInteger(config.controllerMode) || config.controllerMode < 0 || config.controllerMode > 1) {
-    issues.push({ field: "controllerMode", message: "Controller mode must be DS5 or DSE" });
+    issues.push({ field: "controllerMode" });
   }
 
   return issues;
@@ -154,6 +159,16 @@ export function fieldIssue(
   field: keyof ConfigBody,
 ): ConfigValidationIssue | undefined {
   return issues.find((issue) => issue.field === field);
+}
+
+export class ConfigDecodeError extends Error {
+  constructor(
+    public readonly code: "invalidConfig" | "invalidBytes",
+    public readonly values: Record<string, unknown>,
+  ) {
+    super(code);
+    this.name = "ConfigDecodeError";
+  }
 }
 
 function decodeAt(bytes: Uint8Array, offset: number): ConfigBody | null {

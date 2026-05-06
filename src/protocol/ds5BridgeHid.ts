@@ -7,6 +7,8 @@ import {
 
 export const SONY_VENDOR_ID = 0x054c;
 export const SUPPORTED_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
+export const NO_DEVICE_SELECTED_ERROR = "noDeviceSelected";
+export const WEBHID_UNAVAILABLE_ERROR = "webHidUnavailable";
 
 const REPORT_SET_CONFIG = 0xf6;
 const REPORT_GET_CONFIG = 0xf7;
@@ -32,7 +34,7 @@ export class Ds5BridgeHidClient {
 
     const device = devices.find(Ds5BridgeHidClient.isSupportedDevice);
     if (!device) {
-      throw new Error("No DS5 Bridge device was selected");
+      throw new Error(NO_DEVICE_SELECTED_ERROR);
     }
 
     return new Ds5BridgeHidClient(device);
@@ -95,7 +97,7 @@ export function getDeviceLabel(device: HIDDevice | null): string {
 
 function getHid(): HID {
   if (!navigator.hid) {
-    throw new Error("WebHID is not available in this browser");
+    throw new Error(WEBHID_UNAVAILABLE_ERROR);
   }
 
   return navigator.hid;
