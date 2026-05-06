@@ -34,6 +34,10 @@ export const en = {
     offlineReady: "This page is cached and ready for offline access.",
     cacheRefresh: "A new version is available. Updating the page cache.",
   },
+  footer: {
+    title: "Pico2W DualSense 5 Bridge",
+    description: "Web setup driver for turning a Raspberry Pi Pico2W into a wireless adapter for the DualSense (DS5) controller.",
+  },
   device: {
     label: "Device",
     open: "Open",
@@ -43,6 +47,16 @@ export const en = {
   },
   config: {
     title: "Configuration",
+    sections: {
+      feedback: "Feedback output",
+      feedbackDescription: "Tune controller haptics, speaker level, and buffer size.",
+      power: "Power & indicators",
+      powerDescription: "Control inactive disconnect and Pico LED behavior.",
+      performance: "Performance",
+      performanceDescription: "Choose the HID report polling cadence.",
+      compatibility: "Compatibility",
+      compatibilityDescription: "Switch the controller identification mode.",
+    },
     hapticsGain: "Haptics gain",
     speakerVolume: "Speaker volume",
     inactiveTime: "Inactive time",

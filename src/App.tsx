@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { ActionsPanel } from "./components/ActionsPanel";
+import { AppFooter } from "./components/AppFooter";
 import { AppHeader } from "./components/AppHeader";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { DeviceStrip } from "./components/DeviceStrip";
@@ -67,6 +68,8 @@ export default function App() {
           <ConfigPanel bridge={bridge} />
           <ActionsPanel bridge={bridge} hasIssues={hasIssues} isBusy={isBusy} />
         </div>
+
+        <AppFooter />
       </main>
     </>
   );
