@@ -30,6 +30,10 @@ export const en = {
   notice: {
     webHidUnsupported: "WebHID is available in Chromium-based browsers on secure origins.",
   },
+  pwa: {
+    offlineReady: "This page is cached and ready for offline access.",
+    cacheRefresh: "A new version is available. Updating the page cache.",
+  },
   device: {
     label: "Device",
     open: "Open",
@@ -84,6 +88,7 @@ export const en = {
   errors: {
     invalidConfig: "Device returned invalid config: {{issues}}",
     invalidBytes: "Device returned {{count}} bytes, expected at least {{expected}}",
+    noDeviceSelected: "No DS5 Bridge device was selected",
     unexpectedWebHid: "Unexpected WebHID error",
     disconnected: "Device disconnected",
   },

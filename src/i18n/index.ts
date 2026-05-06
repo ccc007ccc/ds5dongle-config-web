@@ -23,4 +23,18 @@ void i18n
     },
   });
 
+i18n.on("languageChanged", (language) => {
+  const normalizedLanguage = language.startsWith("zh") ? "zh-CN" : "en";
+
+  document.documentElement.lang = normalizedLanguage;
+  document.documentElement.translate = false;
+});
+
+void i18n.loadNamespaces([]).then(() => {
+  const normalizedLanguage = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
+
+  document.documentElement.lang = normalizedLanguage;
+  document.documentElement.translate = false;
+});
+
 export default i18n;

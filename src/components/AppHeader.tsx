@@ -16,8 +16,8 @@ export function AppHeader({ isConnected, statusText, theme, onThemeChange }: App
 
   return (
     <header className="app-header">
-      <div>
-        <div className="eyebrow">{t("app.eyebrow")}</div>
+      <div className="brand-lockup">
+        <img className="app-icon" src="/pwa-icon.svg" alt="" aria-hidden="true" />
         <h1>{t("app.title")}</h1>
       </div>
       <div className="header-actions">

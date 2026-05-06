@@ -2,13 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ConfigBody,
+  ConfigDecodeError,
   DEFAULT_CONFIG,
   ConfigValidationIssue,
   configsEqual,
   normalizeConfig,
   validateConfig,
 } from "../protocol/config";
-import { Ds5BridgeHidClient, getDeviceLabel, webHidAvailable } from "../protocol/ds5BridgeHid";
+import {
+  Ds5BridgeHidClient,
+  NO_DEVICE_SELECTED_ERROR,
+  WEBHID_UNAVAILABLE_ERROR,
+  getDeviceLabel,
+  webHidAvailable,
+} from "../protocol/ds5BridgeHid";
 
 type Operation = "connecting" | "reading" | "applying" | "saving" | "reconnecting" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
@@ -119,21 +126,21 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       await attachClient(await Ds5BridgeHidClient.requestDevice());
       await refreshAuthorizedDevices();
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t));
       setOperation(null);
     }
-  }, [attachClient, refreshAuthorizedDevices]);
+  }, [attachClient, refreshAuthorizedDevices, t]);
 
   const connectAuthorized = useCallback(
     async (device: HIDDevice) => {
       try {
         await attachClient(new Ds5BridgeHidClient(device));
       } catch (cause) {
-        setError(errorMessage(cause));
+        setError(errorMessage(cause, t));
         setOperation(null);
       }
     },
-    [attachClient],
+    [attachClient, t],
   );
 
   const readConfig = useCallback(async () => {
@@ -144,10 +151,10 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     try {
       await readConfigWithClient(client);
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t));
       setOperation(null);
     }
-  }, [client, readConfigWithClient]);
+  }, [client, readConfigWithClient, t]);
 
   const applyConfig = useCallback(async () => {
     if (!client || issues.length > 0) {
@@ -163,11 +170,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setSaveState("applied");
       setError(null);
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t));
     } finally {
       setOperation(null);
     }
-  }, [client, draft, issues.length]);
+  }, [client, draft, issues.length, t]);
 
   const saveToFlash = useCallback(async () => {
     if (!client || isDirty) {
@@ -180,11 +187,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setSaveState("saved");
       setError(null);
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t));
     } finally {
       setOperation(null);
     }
-  }, [client, isDirty]);
+  }, [client, isDirty, t]);
 
   const reconnectUsb = useCallback(async () => {
     if (!client) {
@@ -196,11 +203,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       await client.reconnectUsb();
       setError(null);
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(errorMessage(cause, t));
     } finally {
       setOperation(null);
     }
-  }, [client]);
+  }, [client, t]);
 
   const setDraftField = useCallback(
     <Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
@@ -292,10 +299,29 @@ function operationLabel(operation: Exclude<Operation, null>, t: (key: string) =>
   }
 }
 
-function errorMessage(cause: unknown): string {
+function errorMessage(cause: unknown, t: (key: string, values?: Record<string, unknown>) => string): string {
+  if (cause instanceof ConfigDecodeError) {
+    if (cause.code === "invalidConfig") {
+      const fields = Array.isArray(cause.values.issues) ? cause.values.issues : [];
+      const issues = fields.map((field) => t(`validation.${String(field)}`)).join("; ");
+
+      return t("errors.invalidConfig", { issues });
+    }
+
+    return t("errors.invalidBytes", cause.values);
+  }
+
   if (cause instanceof Error) {
+    if (cause.message === NO_DEVICE_SELECTED_ERROR) {
+      return t("errors.noDeviceSelected");
+    }
+
+    if (cause.message === WEBHID_UNAVAILABLE_ERROR) {
+      return t("errors.webHidUnavailable");
+    }
+
     return cause.message;
   }
 
-  return "Unexpected WebHID error";
+  return t("errors.unexpectedWebHid");
 }

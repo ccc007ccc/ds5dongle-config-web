@@ -30,6 +30,10 @@ export const zh = {
   notice: {
     webHidUnsupported: "WebHID 仅在基于 Chromium 的浏览器与安全来源中可用。",
   },
+  pwa: {
+    offlineReady: "网页已缓存，可离线访问",
+    cacheRefresh: "检测到新版本，正在更新网页缓存",
+  },
   device: {
     label: "设备",
     open: "打开",
@@ -84,6 +88,7 @@ export const zh = {
   errors: {
     invalidConfig: "设备返回了无效配置：{{issues}}",
     invalidBytes: "设备返回了 {{count}} 字节，期望至少 {{expected}} 字节",
+    noDeviceSelected: "未选择 DS5 Bridge 设备",
     unexpectedWebHid: "未知 WebHID 错误",
     disconnected: "设备已断开连接",
   },

@@ -29,6 +29,14 @@ function getSystemTheme(): Exclude<ThemeMode, "system"> {
 function applyTheme(mode: ThemeMode, systemTheme: Exclude<ThemeMode, "system">) {
   const root = document.documentElement;
   const resolvedTheme = mode === "system" ? systemTheme : mode;
+  const previousTheme = root.dataset.theme;
+
+  if (previousTheme && previousTheme !== resolvedTheme) {
+    root.dataset.themeTransition = "true";
+    window.setTimeout(() => {
+      delete root.dataset.themeTransition;
+    }, 360);
+  }
 
   root.classList.toggle("dark", resolvedTheme === "dark");
   root.dataset.theme = resolvedTheme;

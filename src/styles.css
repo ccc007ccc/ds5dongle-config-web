@@ -127,6 +127,29 @@ html {
   background: var(--app-surface);
 }
 
+html[data-theme-transition="true"],
+html[data-theme-transition="true"] *,
+html[data-theme-transition="true"] *::before,
+html[data-theme-transition="true"] *::after {
+  transition:
+    background-color 320ms ease,
+    background 320ms ease,
+    border-color 320ms ease,
+    color 320ms ease,
+    fill 320ms ease,
+    stroke 320ms ease,
+    box-shadow 320ms ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme-transition="true"],
+  html[data-theme-transition="true"] *,
+  html[data-theme-transition="true"] *::before,
+  html[data-theme-transition="true"] *::after {
+    transition: none !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -165,6 +188,20 @@ button:disabled {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.app-icon {
+  width: clamp(56px, 9vw, 82px);
+  height: clamp(56px, 9vw, 82px);
+  flex: 0 0 auto;
+  border-radius: 24%;
 }
 
 .header-actions,
