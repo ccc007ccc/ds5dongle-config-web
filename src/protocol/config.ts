@@ -2,7 +2,7 @@ export const CONFIG_BODY_SIZE = 14;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
-export type ControllerMode = 0 | 1;
+export type ControllerMode = 0 | 1 | 2;
 
 export interface ConfigBody {
   hapticsGain: number;
@@ -27,7 +27,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   disablePicoLed: false,
   pollingRateMode: 0,
   hapticsBufferLength: 64,
-  controllerMode: 0,
+  controllerMode: 2,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{
@@ -41,10 +41,10 @@ export const POLLING_RATE_OPTIONS: Array<{
 
 export const CONTROLLER_MODE_OPTIONS: Array<{
   value: ControllerMode;
-  label: string;
 }> = [
-  { value: 0, label: "DS5" },
-  { value: 1, label: "DSE" },
+  { value: 0 },
+  { value: 1 },
+  { value: 2 },
 ];
 
 export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): ConfigBody {
@@ -117,7 +117,7 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
     issues.push({ field: "hapticsBufferLength" });
   }
 
-  if (!Number.isInteger(config.controllerMode) || config.controllerMode < 0 || config.controllerMode > 1) {
+  if (!Number.isInteger(config.controllerMode) || config.controllerMode < 0 || config.controllerMode > 2) {
     issues.push({ field: "controllerMode" });
   }
 
@@ -133,7 +133,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     disablePicoLed: Boolean(config.disablePicoLed),
     pollingRateMode: clampInteger(config.pollingRateMode, 0, 2) as PollingRateMode,
     hapticsBufferLength: clampInteger(config.hapticsBufferLength, 16, 128),
-    controllerMode: clampInteger(config.controllerMode, 0, 1) as ControllerMode,
+    controllerMode: clampInteger(config.controllerMode, 0, 2) as ControllerMode,
   };
 }
 

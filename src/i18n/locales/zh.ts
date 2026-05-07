@@ -66,6 +66,11 @@ export const zh = {
     pollingRateMode: "轮询率模式",
     hapticsBufferLength: "触觉缓冲长度",
     controllerMode: "控制器模式",
+    controllerModeOptions: {
+      ds5: "DS5",
+      dse: "DSE",
+      auto: "自动",
+    },
     pollingRate: {
       hz250: "250 Hz",
       hz500: "500 Hz",
@@ -98,7 +103,7 @@ export const zh = {
     inactiveTime: "闲置时间必须在 5 到 60 分钟之间",
     pollingRateMode: "轮询率模式必须是 0、1 或 2",
     hapticsBufferLength: "触觉缓冲长度必须在 16 到 128 之间",
-    controllerMode: "控制器模式必须是 DS5 或 DSE",
+    controllerMode: "控制器模式必须是 DS5、DSE 或自动",
   },
   errors: {
     invalidConfig: "设备返回了无效配置：{{issues}}",

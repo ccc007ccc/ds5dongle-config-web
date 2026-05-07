@@ -66,6 +66,11 @@ export const en = {
     pollingRateMode: "Polling rate mode",
     hapticsBufferLength: "Haptics buffer length",
     controllerMode: "Controller mode",
+    controllerModeOptions: {
+      ds5: "DS5",
+      dse: "DSE",
+      auto: "Auto",
+    },
     pollingRate: {
       hz250: "250 Hz",
       hz500: "500 Hz",
@@ -98,7 +103,7 @@ export const en = {
     inactiveTime: "Inactive time must be between 5 and 60 minutes",
     pollingRateMode: "Polling rate mode must be 0, 1, or 2",
     hapticsBufferLength: "Haptics buffer length must be between 16 and 128",
-    controllerMode: "Controller mode must be DS5 or DSE",
+    controllerMode: "Controller mode must be DS5, DSE, or Auto",
   },
   errors: {
     invalidConfig: "Device returned invalid config: {{issues}}",
