@@ -8,6 +8,7 @@ interface DeviceStripProps {
   client: unknown | null;
   deviceLabel: string;
   firmwareVersion: string | null;
+  signalStrengthRssi: number | null;
   isBusy: boolean;
   supported: boolean;
   onConnect: () => void;
@@ -19,6 +20,7 @@ export function DeviceStrip({
   client,
   deviceLabel,
   firmwareVersion,
+  signalStrengthRssi,
   isBusy,
   supported,
   onConnect,
@@ -38,9 +40,15 @@ export function DeviceStrip({
             <div className="label">{t("device.label")}</div>
             <strong>{deviceLabel}</strong>
             {connected && (
-              <div className="device-firmware">
-                <span>{t("device.firmwareVersion")}</span>
-                <code>{firmwareVersion || t("device.firmwareUnknown")}</code>
+              <div className="device-metadata">
+                <span className="device-metadata-item">
+                  <span>{t("device.firmwareVersion")}</span>
+                  <code>{firmwareVersion || t("device.firmwareUnknown")}</code>
+                </span>
+                <span className="device-metadata-item" title={t("device.signalStrengthTitle")}>
+                  <span>{t("device.signalStrength")}</span>
+                  <code>{formatSignalStrength(signalStrengthRssi, t)}</code>
+                </span>
               </div>
             )}
           </div>
@@ -71,4 +79,11 @@ export function DeviceStrip({
       </CardContent>
     </Card>
   );
+}
+
+function formatSignalStrength(
+  signalStrengthRssi: number | null,
+  t: (key: string) => string,
+): string {
+  return signalStrengthRssi === null ? t("device.signalStrengthUnknown") : `${signalStrengthRssi} dBm`;
 }

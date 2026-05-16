@@ -21,11 +21,14 @@ type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "sa
 type SaveState = "idle" | "dirty" | "applied" | "saved";
 type UsbEffectiveConfig = Pick<ConfigBody, "pollingRateMode" | "controllerMode">;
 
+const SIGNAL_STRENGTH_REFRESH_INTERVAL_MS = 5_000;
+
 export interface UseDs5BridgeResult {
   supported: boolean;
   client: Ds5BridgeHidClient | null;
   deviceLabel: string;
   firmwareVersion: string | null;
+  signalStrengthRssi: number | null;
   authorizedDevices: HIDDevice[];
   config: ConfigBody | null;
   draft: ConfigBody;
@@ -55,6 +58,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const [client, setClient] = useState<Ds5BridgeHidClient | null>(null);
   const [authorizedDevices, setAuthorizedDevices] = useState<HIDDevice[]>([]);
   const [firmwareVersion, setFirmwareVersion] = useState<string | null>(null);
+  const [signalStrengthRssi, setSignalStrengthRssi] = useState<number | null>(null);
   const [config, setConfig] = useState<ConfigBody | null>(null);
   const [draft, setDraft] = useState<ConfigBody>(DEFAULT_CONFIG);
   const [operation, setOperation] = useState<Operation>(null);
@@ -134,6 +138,19 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, []);
 
+  const readSignalStrengthWithClient = useCallback(async (nextClient: Ds5BridgeHidClient) => {
+    try {
+      const nextSignalStrength = await nextClient.readSignalStrength();
+      if (clientRef.current === nextClient) {
+        setSignalStrengthRssi(nextSignalStrength);
+      }
+    } catch {
+      if (clientRef.current === nextClient) {
+        setSignalStrengthRssi(null);
+      }
+    }
+  }, []);
+
   const attachClient = useCallback(
     async (nextClient: Ds5BridgeHidClient) => {
       setOperation("connecting");
@@ -142,6 +159,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         clientRef.current = nextClient;
         setClient(nextClient);
         setFirmwareVersion(null);
+        setSignalStrengthRssi(null);
         setError(null);
       } finally {
         setOperation(null);
@@ -154,8 +172,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         setError(errorMessage(cause, t));
         setOperation(null);
       }
+      void readSignalStrengthWithClient(nextClient);
     },
-    [readConfigWithClient, readFirmwareVersionWithClient, t],
+    [readConfigWithClient, readFirmwareVersionWithClient, readSignalStrengthWithClient, t],
   );
 
   const connect = useCallback(async () => {
@@ -320,6 +339,18 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   }, [refreshAuthorizedDevices]);
 
   useEffect(() => {
+    if (!client) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void readSignalStrengthWithClient(client);
+    }, SIGNAL_STRENGTH_REFRESH_INTERVAL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [client, readSignalStrengthWithClient]);
+
+  useEffect(() => {
     if (!navigator.hid) {
       return;
     }
@@ -332,6 +363,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         usbEffectiveConfigRef.current = null;
         setClient(null);
         setFirmwareVersion(null);
+        setSignalStrengthRssi(null);
         setConfig(null);
         setDraft(DEFAULT_CONFIG);
         setNeedsUsbReconnect(false);
@@ -359,6 +391,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     client,
     deviceLabel,
     firmwareVersion,
+    signalStrengthRssi,
     authorizedDevices,
     config,
     draft,

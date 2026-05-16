@@ -344,10 +344,10 @@ h2 {
   overflow-wrap: anywhere;
 }
 
-.device-firmware {
+.device-metadata {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 6px 12px;
   align-items: center;
   margin-top: 3px;
   color: var(--muted-foreground);
@@ -355,7 +355,13 @@ h2 {
   font-weight: 700;
 }
 
-.device-firmware code {
+.device-metadata-item {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.device-metadata code {
   color: var(--app-heading);
   font-family: inherit;
   overflow-wrap: anywhere;

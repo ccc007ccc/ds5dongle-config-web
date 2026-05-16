@@ -13,6 +13,7 @@ export const WEBHID_UNAVAILABLE_ERROR = "webHidUnavailable";
 const REPORT_SET_CONFIG = 0xf6;
 const REPORT_GET_CONFIG = 0xf7;
 const REPORT_GET_FIRMWARE_VERSION = 0xf8;
+const REPORT_GET_SIGNAL_STRENGTH = 0xf9;
 const CMD_UPDATE_CONFIG = 0x01;
 const CMD_SAVE_TO_FLASH = 0x02;
 const CMD_RECONNECT_USB = 0x03;
@@ -68,6 +69,12 @@ export class Ds5BridgeHidClient {
     await this.open();
     const report = await this.device.receiveFeatureReport(REPORT_GET_FIRMWARE_VERSION);
     return decodeFirmwareVersion(report);
+  }
+
+  async readSignalStrength(): Promise<number | null> {
+    await this.open();
+    const report = await this.device.receiveFeatureReport(REPORT_GET_SIGNAL_STRENGTH);
+    return decodeSignalStrength(report);
   }
 
   async applyConfig(config: ConfigBody): Promise<void> {
@@ -137,6 +144,28 @@ function decodeFirmwareVersion(source: ArrayBuffer | DataView | Uint8Array): str
 function decodePrintableString(bytes: Uint8Array): string {
   const text = new TextDecoder().decode(bytes).replace(/\0/g, "").trim();
   return /^[\x20-\x7e]+$/.test(text) ? text : "";
+}
+
+function decodeSignalStrength(source: ArrayBuffer | DataView | Uint8Array): number | null {
+  const bytes = toUint8Array(source);
+  const offsets = bytes[0] === REPORT_GET_SIGNAL_STRENGTH ? [1, 0] : [0, 1];
+
+  for (const offset of offsets) {
+    if (offset >= bytes.length) {
+      continue;
+    }
+
+    const value = toInt8(bytes[offset]);
+    if (value >= -128 && value <= 0) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function toInt8(byte: number): number {
+  return byte > 0x7f ? byte - 0x100 : byte;
 }
 
 function trimTrailingZeros(bytes: Uint8Array): Uint8Array {
