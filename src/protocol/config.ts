@@ -113,7 +113,7 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
     issues.push({ field: "speakerVolume" });
   }
 
-  if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 10 || config.inactiveTime > 60) {
+  if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 5 || config.inactiveTime > 60) {
     issues.push({ field: "inactiveTime" });
   }
 
