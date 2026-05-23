@@ -8,6 +8,7 @@ import { FloatControl } from "./config/FloatControl";
 import { IntegerControl } from "./config/IntegerControl";
 import { PollingRateControl } from "./config/PollingRateControl";
 import { ToggleControl } from "./config/ToggleControl";
+import { VolumeByteControl } from "./config/VolumeByteControl";
 
 interface ConfigPanelProps {
   bridge: UseDs5BridgeResult;
@@ -46,28 +47,42 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
               issue={fieldIssue(bridge.issues, "hapticsGain")}
               onChange={(value) => bridge.setDraftField("hapticsGain", value)}
             />
-            <FloatControl
-              label={`${t("config.speakerVolume")} (%)`}
+            <VolumeByteControl
+              label={t("config.speakerVolume")}
               value={bridge.draft.speakerVolume}
-              min={-100}
-              max={0}
-              step={0.01}
-              displayMin={0}
-              displayMax={100}
-              displayStep={1}
-              valueToDisplay={speakerVolumeToPercent}
-              displayToValue={percentToSpeakerVolume}
-              fractionDigits={0}
+              sliderMax={100}
+              valueToSlider={volumeParameterToPercent}
+              sliderToValue={percentToVolumeParameter}
+              inputMax={127}
+              valueToInput={volumeParameterToInput}
+              inputToValue={volumeInputToParameter}
               issue={fieldIssue(bridge.issues, "speakerVolume")}
               onChange={(value) => bridge.setDraftField("speakerVolume", value)}
             />
+            <VolumeByteControl
+              label={t("config.headsetVolume")}
+              value={bridge.draft.headsetVolume}
+              sliderMax={100}
+              valueToSlider={volumeParameterToPercent}
+              sliderToValue={percentToVolumeParameter}
+              inputMax={127}
+              valueToInput={volumeParameterToInput}
+              inputToValue={volumeInputToParameter}
+              issue={fieldIssue(bridge.issues, "headsetVolume")}
+              onChange={(value) => bridge.setDraftField("headsetVolume", value)}
+            />
+            <ToggleControl
+              label={t("config.syncSpeakerHeadsetVolume")}
+              value={bridge.draft.syncSpeakerHeadsetVolume}
+              onChange={(value) => bridge.setDraftField("syncSpeakerHeadsetVolume", value)}
+            />
             <IntegerControl
-              label={t("config.hapticsBufferLength")}
-              value={bridge.draft.hapticsBufferLength}
+              label={t("config.audioBufferLength")}
+              value={bridge.draft.audioBufferLength}
               min={16}
               max={128}
-              issue={fieldIssue(bridge.issues, "hapticsBufferLength")}
-              onChange={(value) => bridge.setDraftField("hapticsBufferLength", value)}
+              issue={fieldIssue(bridge.issues, "audioBufferLength")}
+              onChange={(value) => bridge.setDraftField("audioBufferLength", value)}
             />
           </div>
         </section>
@@ -144,18 +159,39 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
   );
 }
 
-function speakerVolumeToPercent(value: number): number {
-  if (value <= -100) {
+function volumeParameterToPercent(value: number): number {
+  if (value <= 0) {
     return 0;
   }
 
-  return Math.min(100, Math.max(0, 100 * 10 ** (value / 20)));
-}
-
-function percentToSpeakerVolume(value: number): number {
-  if (value <= 0) {
-    return -100;
+  if (value >= 100) {
+    return 100;
   }
 
-  return Math.min(0, Math.max(-100, 20 * Math.log10(value / 100)));
+  return Math.min(100, Math.max(0, 100 * 10 ** ((value - 100) / 35)));
 }
+
+function percentToVolumeParameter(value: number): number {
+  if (value <= 0) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, 100 + 35 * Math.log10(value / 100)));
+}
+
+function volumeParameterToInput(value: number): number {
+  if (value > 100) {
+    return value;
+  }
+
+  return volumeParameterToPercent(value);
+}
+
+function volumeInputToParameter(value: number): number {
+  if (value > 100) {
+    return value;
+  }
+
+  return percentToVolumeParameter(value);
+}
+

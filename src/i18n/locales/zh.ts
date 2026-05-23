@@ -55,7 +55,7 @@ export const zh = {
     title: "配置",
     sections: {
       feedback: "反馈输出",
-      feedbackDescription: "调整手柄触觉、扬声器与触觉缓冲。",
+      feedbackDescription: "调整手柄触觉、扬声器、耳机与音频缓冲。",
       power: "电源与指示",
       powerDescription: "控制闲置断连与 Pico LED 行为。",
       performance: "性能",
@@ -65,12 +65,14 @@ export const zh = {
     },
     hapticsGain: "触觉增益",
     speakerVolume: "扬声器音量",
+    headsetVolume: "耳机音量",
+    syncSpeakerHeadsetVolume: "同步扬声器与耳机音量",
     inactiveTime: "闲置时间",
     inactiveTimeUnit: "单位：分钟",
     disableInactiveDisconnect: "禁用闲置断连",
     disablePicoLed: "禁用 Pico LED",
     pollingRateMode: "轮询率模式",
-    hapticsBufferLength: "触觉缓冲长度",
+    audioBufferLength: "音频缓冲长度",
     controllerMode: "控制器模式",
     controllerModeOptions: {
       ds5: "DS5",
@@ -105,10 +107,11 @@ export const zh = {
   },
   validation: {
     hapticsGain: "触觉增益必须在 1.0 到 2.0 之间",
-    speakerVolume: "扬声器音量必须在 0% 到 100% 之间",
+    speakerVolume: "扬声器音量必须在 0 到 127 之间",
+    headsetVolume: "耳机音量必须在 0 到 127 之间",
     inactiveTime: "闲置时间必须在 5 到 60 分钟之间",
     pollingRateMode: "轮询率模式必须是 0、1 或 2",
-    hapticsBufferLength: "触觉缓冲长度必须在 16 到 128 之间",
+    audioBufferLength: "音频缓冲长度必须在 16 到 128 之间",
     controllerMode: "控制器模式必须是 DS5、DSE 或自动",
   },
   errors: {

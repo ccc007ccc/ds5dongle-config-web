@@ -298,7 +298,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
 
   const setDraftField = useCallback(
     <Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
-      const nextDraft = { ...draftRef.current, [field]: value };
+      const nextDraft = syncDraftVolumeFields({ ...draftRef.current, [field]: value }, field);
       draftRef.current = nextDraft;
       setDraft(nextDraft);
       setSaveState("dirty");
@@ -446,6 +446,26 @@ function usbEffectiveConfigChanged(current: UsbEffectiveConfig | null, next: Con
   }
 
   return current.pollingRateMode !== next.pollingRateMode || current.controllerMode !== next.controllerMode;
+}
+
+function syncDraftVolumeFields(changedDraft: ConfigBody, changedField: keyof ConfigBody): ConfigBody {
+  if (changedField === "syncSpeakerHeadsetVolume" && changedDraft.syncSpeakerHeadsetVolume) {
+    return { ...changedDraft, headsetVolume: changedDraft.speakerVolume };
+  }
+
+  if (!changedDraft.syncSpeakerHeadsetVolume) {
+    return changedDraft;
+  }
+
+  if (changedField === "speakerVolume") {
+    return { ...changedDraft, headsetVolume: changedDraft.speakerVolume };
+  }
+
+  if (changedField === "headsetVolume") {
+    return { ...changedDraft, speakerVolume: changedDraft.headsetVolume };
+  }
+
+  return changedDraft;
 }
 
 function errorMessage(cause: unknown, t: (key: string, values?: Record<string, unknown>) => string): string {

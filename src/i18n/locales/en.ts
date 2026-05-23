@@ -55,7 +55,7 @@ export const en = {
     title: "Configuration",
     sections: {
       feedback: "Feedback output",
-      feedbackDescription: "Tune controller haptics, speaker level, and buffer size.",
+      feedbackDescription: "Tune controller haptics, speaker level, headset level, and buffer size.",
       power: "Power & indicators",
       powerDescription: "Control inactive disconnect and Pico LED behavior.",
       performance: "Performance",
@@ -65,12 +65,14 @@ export const en = {
     },
     hapticsGain: "Haptics gain",
     speakerVolume: "Speaker volume",
+    headsetVolume: "Headset volume",
+    syncSpeakerHeadsetVolume: "Sync speaker and headset volume",
     inactiveTime: "Inactive time",
     inactiveTimeUnit: "Unit: minutes",
     disableInactiveDisconnect: "Disable inactive disconnect",
     disablePicoLed: "Disable Pico LED",
     pollingRateMode: "Polling rate mode",
-    hapticsBufferLength: "Haptics buffer length",
+    audioBufferLength: "Audio buffer length",
     controllerMode: "Controller mode",
     controllerModeOptions: {
       ds5: "DS5",
@@ -105,10 +107,11 @@ export const en = {
   },
   validation: {
     hapticsGain: "Haptics gain must be between 1.0 and 2.0",
-    speakerVolume: "Speaker volume must be between 0% and 100%",
+    speakerVolume: "Speaker volume must be between 0 and 127",
+    headsetVolume: "Headset volume must be between 0 and 127",
     inactiveTime: "Inactive time must be between 5 and 60 minutes",
     pollingRateMode: "Polling rate mode must be 0, 1, or 2",
-    hapticsBufferLength: "Haptics buffer length must be between 16 and 128",
+    audioBufferLength: "Audio buffer length must be between 16 and 128",
     controllerMode: "Controller mode must be DS5, DSE, or Auto",
   },
   errors: {
