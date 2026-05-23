@@ -1,5 +1,5 @@
 export const CONFIG_BODY_VERSION = 2;
-export const CONFIG_BODY_SIZE = 14;
+export const CONFIG_BODY_SIZE = 15;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
@@ -10,6 +10,7 @@ export interface ConfigBody {
   speakerVolume: number;
   headsetVolume: number;
   syncSpeakerHeadsetVolume: boolean;
+  speakerGain: number;
   inactiveTime: number;
   disableInactiveDisconnect: boolean;
   disablePicoLed: boolean;
@@ -27,6 +28,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   speakerVolume: 0,
   headsetVolume: 0,
   syncSpeakerHeadsetVolume: false,
+  speakerGain: 0,
   inactiveTime: 10,
   disableInactiveDisconnect: false,
   disablePicoLed: false,
@@ -99,12 +101,13 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(5, config.speakerVolume);
   view.setUint8(6, config.headsetVolume);
   view.setUint8(7, config.syncSpeakerHeadsetVolume ? 1 : 0);
-  view.setUint8(8, config.inactiveTime);
-  view.setUint8(9, config.disableInactiveDisconnect ? 1 : 0);
-  view.setUint8(10, config.disablePicoLed ? 1 : 0);
-  view.setUint8(11, config.pollingRateMode);
-  view.setUint8(12, config.audioBufferLength);
-  view.setUint8(13, config.controllerMode);
+  view.setUint8(8, config.speakerGain);
+  view.setUint8(9, config.inactiveTime);
+  view.setUint8(10, config.disableInactiveDisconnect ? 1 : 0);
+  view.setUint8(11, config.disablePicoLed ? 1 : 0);
+  view.setUint8(12, config.pollingRateMode);
+  view.setUint8(13, config.audioBufferLength);
+  view.setUint8(14, config.controllerMode);
   return bytes;
 }
 
@@ -121,6 +124,10 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
 
   if (!Number.isInteger(config.headsetVolume) || config.headsetVolume < 0 || config.headsetVolume > 127) {
     issues.push({ field: "headsetVolume" });
+  }
+
+  if (!Number.isInteger(config.speakerGain) || config.speakerGain < 0 || config.speakerGain > 7) {
+    issues.push({ field: "speakerGain" });
   }
 
   if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 5 || config.inactiveTime > 60) {
@@ -154,6 +161,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     speakerVolume,
     headsetVolume: config.syncSpeakerHeadsetVolume ? speakerVolume : clampInteger(config.headsetVolume, 0, 127),
     syncSpeakerHeadsetVolume: Boolean(config.syncSpeakerHeadsetVolume),
+    speakerGain: clampInteger(config.speakerGain, 0, 7),
     inactiveTime: clampInteger(config.inactiveTime, 5, 60),
     disableInactiveDisconnect: Boolean(config.disableInactiveDisconnect),
     disablePicoLed: Boolean(config.disablePicoLed),
@@ -173,6 +181,7 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.speakerVolume === right.speakerVolume &&
     left.headsetVolume === right.headsetVolume &&
     left.syncSpeakerHeadsetVolume === right.syncSpeakerHeadsetVolume &&
+    left.speakerGain === right.speakerGain &&
     left.inactiveTime === right.inactiveTime &&
     left.disableInactiveDisconnect === right.disableInactiveDisconnect &&
     left.disablePicoLed === right.disablePicoLed &&
@@ -217,12 +226,13 @@ function decodeAt(bytes: Uint8Array, offset: number): DecodedConfigCandidate | n
       speakerVolume: view.getUint8(5),
       headsetVolume: view.getUint8(6),
       syncSpeakerHeadsetVolume: view.getUint8(7) === 1,
-      inactiveTime: view.getUint8(8),
-      disableInactiveDisconnect: view.getUint8(9) === 1,
-      disablePicoLed: view.getUint8(10) === 1,
-      pollingRateMode: view.getUint8(11) as PollingRateMode,
-      audioBufferLength: view.getUint8(12),
-      controllerMode: view.getUint8(13) as ControllerMode,
+      speakerGain: view.getUint8(8),
+      inactiveTime: view.getUint8(9),
+      disableInactiveDisconnect: view.getUint8(10) === 1,
+      disablePicoLed: view.getUint8(11) === 1,
+      pollingRateMode: view.getUint8(12) as PollingRateMode,
+      audioBufferLength: view.getUint8(13),
+      controllerMode: view.getUint8(14) as ControllerMode,
     },
   };
 }

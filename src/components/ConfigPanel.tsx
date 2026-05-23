@@ -77,6 +77,14 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
               onChange={(value) => bridge.setDraftField("syncSpeakerHeadsetVolume", value)}
             />
             <IntegerControl
+              label={t("config.speakerGain")}
+              value={bridge.draft.speakerGain}
+              min={0}
+              max={7}
+              issue={fieldIssue(bridge.issues, "speakerGain")}
+              onChange={(value) => bridge.setDraftField("speakerGain", value)}
+            />
+            <IntegerControl
               label={t("config.audioBufferLength")}
               value={bridge.draft.audioBufferLength}
               min={16}
