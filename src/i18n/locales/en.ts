@@ -67,6 +67,7 @@ export const en = {
     speakerVolume: "Speaker volume",
     headsetVolume: "Headset volume",
     syncSpeakerHeadsetVolume: "Sync speaker and headset volume",
+    lockVolume: "Lock volume",
     speakerGain: "Speaker gain",
     inactiveTime: "Inactive time",
     inactiveTimeUnit: "Unit: minutes",

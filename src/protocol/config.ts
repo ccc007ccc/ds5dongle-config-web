@@ -1,5 +1,5 @@
 export const CONFIG_BODY_VERSION = 2;
-export const CONFIG_BODY_SIZE = 15;
+export const CONFIG_BODY_SIZE = 16;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
@@ -17,6 +17,7 @@ export interface ConfigBody {
   pollingRateMode: PollingRateMode;
   audioBufferLength: number;
   controllerMode: ControllerMode;
+  lockVolume: boolean;
 }
 
 export interface ConfigValidationIssue {
@@ -35,6 +36,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   pollingRateMode: 0,
   audioBufferLength: 64,
   controllerMode: 2,
+  lockVolume: false,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{
@@ -108,6 +110,7 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(12, config.pollingRateMode);
   view.setUint8(13, config.audioBufferLength);
   view.setUint8(14, config.controllerMode);
+  view.setUint8(15, config.lockVolume ? 1 : 0);
   return bytes;
 }
 
@@ -168,6 +171,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     pollingRateMode: clampInteger(config.pollingRateMode, 0, 2) as PollingRateMode,
     audioBufferLength: clampInteger(config.audioBufferLength, 16, 128),
     controllerMode: clampInteger(config.controllerMode, 0, 2) as ControllerMode,
+    lockVolume: Boolean(config.lockVolume),
   };
 }
 
@@ -187,7 +191,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.disablePicoLed === right.disablePicoLed &&
     left.pollingRateMode === right.pollingRateMode &&
     left.audioBufferLength === right.audioBufferLength &&
-    left.controllerMode === right.controllerMode
+    left.controllerMode === right.controllerMode &&
+    left.lockVolume === right.lockVolume
   );
 }
 
@@ -233,6 +238,7 @@ function decodeAt(bytes: Uint8Array, offset: number): DecodedConfigCandidate | n
       pollingRateMode: view.getUint8(12) as PollingRateMode,
       audioBufferLength: view.getUint8(13),
       controllerMode: view.getUint8(14) as ControllerMode,
+      lockVolume: view.getUint8(15) === 1,
     },
   };
 }

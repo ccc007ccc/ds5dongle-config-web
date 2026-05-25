@@ -67,6 +67,7 @@ export const zh = {
     speakerVolume: "扬声器音量",
     headsetVolume: "耳机音量",
     syncSpeakerHeadsetVolume: "同步扬声器与耳机音量",
+    lockVolume: "锁定音量",
     speakerGain: "扬声器增益",
     inactiveTime: "闲置时间",
     inactiveTimeUnit: "单位：分钟",

@@ -67,11 +67,6 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
               issue={fieldIssue(bridge.issues, "headsetVolume")}
               onChange={(value) => bridge.setDraftField("headsetVolume", value)}
             />
-            <ToggleControl
-              label={t("config.syncSpeakerHeadsetVolume")}
-              value={bridge.draft.syncSpeakerHeadsetVolume}
-              onChange={(value) => bridge.setDraftField("syncSpeakerHeadsetVolume", value)}
-            />
             <VolumeByteControl
               label={t("config.speakerVolume")}
               value={bridge.draft.speakerVolume}
@@ -83,6 +78,16 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
               inputToValue={volumeInputToParameter}
               issue={fieldIssue(bridge.issues, "speakerVolume")}
               onChange={(value) => bridge.setDraftField("speakerVolume", value)}
+            />
+            <ToggleControl
+              label={t("config.syncSpeakerHeadsetVolume")}
+              value={bridge.draft.syncSpeakerHeadsetVolume}
+              onChange={(value) => bridge.setDraftField("syncSpeakerHeadsetVolume", value)}
+            />
+            <ToggleControl
+              label={t("config.lockVolume")}
+              value={bridge.draft.lockVolume}
+              onChange={(value) => bridge.setDraftField("lockVolume", value)}
             />
             <IntegerControl
               label={t("config.audioBufferLength")}
