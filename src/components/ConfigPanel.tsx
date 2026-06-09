@@ -174,6 +174,11 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
                   value={bridge.draft.disableUsbSn}
                   onChange={(value) => bridge.setDraftField("disableUsbSn", value)}
                 />
+                <ToggleControl
+                  label={t("config.psShortcutEnabled")}
+                  value={bridge.draft.psShortcutEnabled}
+                  onChange={(value) => bridge.setDraftField("psShortcutEnabled", value)}
+                />
               </div>
             </section>
           </div>
