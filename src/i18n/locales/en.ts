@@ -77,7 +77,7 @@ export const en = {
     audioBufferLength: "Audio buffer length",
     controllerMode: "Controller mode",
     disableUsbSn: "Disable USB serial number",
-    psShortcutEnabled: "PS button = Xbox Guide",
+    psShortcutEnabled: "PS button = Xbox Guide (Only available in the USBWake firmware)",
     controllerModeOptions: {
       ds5: "DS5",
       dse: "DSE",

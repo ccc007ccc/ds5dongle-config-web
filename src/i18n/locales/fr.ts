@@ -88,7 +88,8 @@ export const fr = {
     pollingRateMode: "Mode de fréquence d’interrogation",
     audioBufferLength: "Taille du buffer audio",
     controllerMode: "Mode de la manette",
-    psShortcutEnabled: "Bouton PS = Guide Xbox",
+    disableUsbSn: "Désactiver le numéro de série USB",
+    psShortcutEnabled: "Bouton PS = Guide Xbox (uniquement disponible dans le firmware USBWake)",
     controllerModeOptions: {
       ds5: "DS5",
       dse: "DSE",

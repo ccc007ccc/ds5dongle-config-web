@@ -77,7 +77,7 @@ export const zh = {
     audioBufferLength: "音频缓冲长度",
     controllerMode: "控制器模式",
     disableUsbSn: "禁用 USB 序列号",
-    psShortcutEnabled: "PS 键 = Xbox 指南",
+    psShortcutEnabled: "PS 键 = Xbox 指南 (仅在 USBWake 固件有效)",
     controllerModeOptions: {
       ds5: "DS5",
       dse: "DSE",
