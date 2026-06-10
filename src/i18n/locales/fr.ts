@@ -88,6 +88,7 @@ export const fr = {
     pollingRateMode: "Mode de fréquence d’interrogation",
     audioBufferLength: "Taille du buffer audio",
     controllerMode: "Mode de la manette",
+    psShortcutEnabled: "Bouton PS = Guide Xbox",
     controllerModeOptions: {
       ds5: "DS5",
       dse: "DSE",

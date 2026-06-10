@@ -1,5 +1,5 @@
 export const CONFIG_BODY_VERSION = 2;
-export const CONFIG_BODY_SIZE = 17;
+export const CONFIG_BODY_SIZE = 18;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
@@ -19,6 +19,7 @@ export interface ConfigBody {
   controllerMode: ControllerMode;
   lockVolume: boolean;
   disableUsbSn: boolean;
+  psShortcutEnabled: boolean;
 }
 
 export interface ConfigValidationIssue {
@@ -39,6 +40,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   controllerMode: 2,
   lockVolume: false,
   disableUsbSn: false,
+  psShortcutEnabled: false,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{
@@ -114,6 +116,7 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(14, config.controllerMode);
   view.setUint8(15, config.lockVolume ? 1 : 0);
   view.setUint8(16, config.disableUsbSn ? 1 : 0);
+  view.setUint8(17, config.psShortcutEnabled ? 1 : 0);
   return bytes;
 }
 
@@ -176,6 +179,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     controllerMode: clampInteger(config.controllerMode, 0, 2) as ControllerMode,
     lockVolume: Boolean(config.lockVolume),
     disableUsbSn: Boolean(config.disableUsbSn),
+    psShortcutEnabled: Boolean(config.psShortcutEnabled),
   };
 }
 
@@ -197,7 +201,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.audioBufferLength === right.audioBufferLength &&
     left.controllerMode === right.controllerMode &&
     left.lockVolume === right.lockVolume &&
-    left.disableUsbSn === right.disableUsbSn
+    left.disableUsbSn === right.disableUsbSn &&
+    left.psShortcutEnabled === right.psShortcutEnabled
   );
 }
 
@@ -245,6 +250,7 @@ function decodeAt(bytes: Uint8Array, offset: number): DecodedConfigCandidate | n
       controllerMode: view.getUint8(14) as ControllerMode,
       lockVolume: view.getUint8(15) === 1,
       disableUsbSn: view.getUint8(16) === 1,
+      psShortcutEnabled: view.getUint8(17) === 1,
     },
   };
 }

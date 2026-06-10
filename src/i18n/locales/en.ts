@@ -77,6 +77,7 @@ export const en = {
     audioBufferLength: "Audio buffer length",
     controllerMode: "Controller mode",
     disableUsbSn: "Disable USB serial number",
+    psShortcutEnabled: "PS button = Xbox Guide",
     controllerModeOptions: {
       ds5: "DS5",
       dse: "DSE",
