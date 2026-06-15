@@ -18,7 +18,7 @@ import {
   type SignalStatus,
 } from "../protocol/ds5BridgeHid";
 
-type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | null;
+type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | "rebooting" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
 type UsbEffectiveConfig = Pick<ConfigBody, "pollingRateMode" | "controllerMode" | "disableUsbSn">;
 
@@ -55,6 +55,7 @@ export interface UseDs5BridgeResult {
   readConfig: () => Promise<void>;
   saveToFlash: () => Promise<void>;
   reconnectUsb: () => Promise<void>;
+  rebootToBootloader: () => Promise<void>;
   resetToDefaults: () => Promise<void>;
   clearError: () => void;
 }
@@ -304,6 +305,22 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, [client, t]);
 
+  const rebootToBootloader = useCallback(async () => {
+    if (!client) {
+      return;
+    }
+
+    setOperation("rebooting");
+    try {
+      await client.rebootToBootloader();
+      setError(null);
+    } catch (cause) {
+      setError(errorMessage(cause, t));
+    } finally {
+      setOperation(null);
+    }
+  }, [client, t]);
+
   const setDraftField = useCallback(
     <Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
       const nextDraft = syncDraftVolumeFields({ ...draftRef.current, [field]: value }, field);
@@ -420,6 +437,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     readConfig,
     saveToFlash,
     reconnectUsb,
+    rebootToBootloader,
     resetToDefaults,
     clearError: () => setError(null),
   };
@@ -439,6 +457,8 @@ function operationLabel(operation: Exclude<Operation, null>, t: (key: string) =>
       return t("status.saving");
     case "reconnecting":
       return t("status.reconnecting");
+    case "rebooting":
+      return t("status.rebooting");
   }
 }
 

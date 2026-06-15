@@ -1,5 +1,5 @@
-export const CONFIG_BODY_VERSION = 3;
-export const CONFIG_BODY_SIZE = 20;
+export const CONFIG_BODY_VERSION = 4;
+export const CONFIG_BODY_SIZE = 21;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
@@ -22,6 +22,7 @@ export interface ConfigBody {
   psShortcutEnabled: boolean;
   disableMic: boolean;
   disableSpeaker: boolean;
+  enableWake: boolean;
 }
 
 export interface ConfigValidationIssue {
@@ -45,6 +46,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   psShortcutEnabled: false,
   disableMic: false,
   disableSpeaker: false,
+  enableWake: false,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{
@@ -123,6 +125,7 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(17, config.psShortcutEnabled ? 1 : 0);
   view.setUint8(18, config.disableMic ? 1 : 0);
   view.setUint8(19, config.disableSpeaker ? 1 : 0);
+  view.setUint8(20, config.enableWake ? 1 : 0);
   return bytes;
 }
 
@@ -188,6 +191,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     psShortcutEnabled: Boolean(config.psShortcutEnabled),
     disableMic: Boolean(config.disableMic),
     disableSpeaker: Boolean(config.disableSpeaker),
+    enableWake: Boolean(config.enableWake),
   };
 }
 
@@ -212,7 +216,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.disableUsbSn === right.disableUsbSn &&
     left.psShortcutEnabled === right.psShortcutEnabled &&
     left.disableMic === right.disableMic &&
-    left.disableSpeaker === right.disableSpeaker
+    left.disableSpeaker === right.disableSpeaker &&
+    left.enableWake === right.enableWake
   );
 }
 
@@ -263,6 +268,7 @@ function decodeAt(bytes: Uint8Array, offset: number): DecodedConfigCandidate | n
       psShortcutEnabled: view.getUint8(17) === 1,
       disableMic: view.getUint8(18) === 1,
       disableSpeaker: view.getUint8(19) === 1,
+      enableWake: view.getUint8(20) === 1,
     },
   };
 }

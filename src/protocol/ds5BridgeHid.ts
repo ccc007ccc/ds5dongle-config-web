@@ -20,6 +20,7 @@ const CMD_RECONNECT_USB = 0x03;
 const CMD_GET_CONFIG = 0x04;
 const CMD_GET_FIRMWARE_VERSION = 0x05;
 const CMD_GET_SIGNAL_STATUS = 0x06;
+const CMD_REBOOT_BOOTLOADER = 0x07;
 
 export interface SignalStatus {
   rssi: number | null;
@@ -29,6 +30,11 @@ export interface SignalStatus {
 
 export class Ds5BridgeHidClient {
   constructor(public readonly device: HIDDevice) {}
+
+  // Serializes command/response exchanges. WebHID does not serialize feature
+  // reports across call sites, so without this the periodic signal poll can
+  // interleave with a config apply and read an empty/crossed 0x81 response.
+  private commandLock: Promise<unknown> = Promise.resolve();
 
   static isSupportedDevice(device: HIDDevice): boolean {
     return device.vendorId === SONY_VENDOR_ID && SUPPORTED_PRODUCT_IDS.includes(device.productId as 0x0ce6 | 0x0df2);
@@ -70,20 +76,17 @@ export class Ds5BridgeHidClient {
 
   async readConfig(): Promise<ConfigBody> {
     await this.open();
-    await this.sendCommand(CMD_GET_CONFIG);
-    return decodeConfigBody(await this.readCommandResponse(CMD_GET_CONFIG));
+    return decodeConfigBody(await this.exchange(CMD_GET_CONFIG));
   }
 
   async readFirmwareVersion(): Promise<string> {
     await this.open();
-    await this.sendCommand(CMD_GET_FIRMWARE_VERSION);
-    return decodeFirmwareVersion(await this.readCommandResponse(CMD_GET_FIRMWARE_VERSION));
+    return decodeFirmwareVersion(await this.exchange(CMD_GET_FIRMWARE_VERSION));
   }
 
   async readSignalStatus(): Promise<SignalStatus> {
     await this.open();
-    await this.sendCommand(CMD_GET_SIGNAL_STATUS);
-    return decodeSignalStatus(await this.readCommandResponse(CMD_GET_SIGNAL_STATUS));
+    return decodeSignalStatus(await this.exchange(CMD_GET_SIGNAL_STATUS));
   }
 
   async applyConfig(config: ConfigBody, previousConfig: ConfigBody | null = null): Promise<void> {
@@ -100,8 +103,7 @@ export class Ds5BridgeHidClient {
       const payload = new Uint8Array(new ArrayBuffer(value.byteLength + 1));
       payload[0] = field.fieldId;
       payload.set(value, 1);
-      await this.sendCommand(CMD_UPDATE_CONFIG_FIELD, payload);
-      const response = await this.readCommandResponse(CMD_UPDATE_CONFIG_FIELD);
+      const response = await this.exchange(CMD_UPDATE_CONFIG_FIELD, payload);
 
       if (response[0] !== 0x00) {
         throw new Error(`Device rejected config field 0x${field.fieldId.toString(16).padStart(2, "0")}`);
@@ -111,12 +113,31 @@ export class Ds5BridgeHidClient {
 
   async saveToFlash(): Promise<void> {
     await this.open();
-    await this.sendCommand(CMD_SAVE_TO_FLASH);
+    await this.enqueue(() => this.sendCommand(CMD_SAVE_TO_FLASH));
   }
 
   async reconnectUsb(): Promise<void> {
     await this.open();
-    await this.sendCommand(CMD_RECONNECT_USB);
+    await this.enqueue(() => this.sendCommand(CMD_RECONNECT_USB));
+  }
+
+  async rebootToBootloader(): Promise<void> {
+    await this.open();
+    await this.enqueue(() => this.sendCommand(CMD_REBOOT_BOOTLOADER));
+  }
+
+  // Run an async task with exclusive access to the command/response reports.
+  private enqueue<T>(task: () => Promise<T>): Promise<T> {
+    const run = this.commandLock.then(task, task);
+    this.commandLock = run.then(() => undefined, () => undefined);
+    return run;
+  }
+
+  private exchange(command: number, payload?: Uint8Array): Promise<Uint8Array> {
+    return this.enqueue(async () => {
+      await this.sendCommand(command, payload);
+      return this.readCommandResponse(command);
+    });
   }
 
   private async sendCommand(command: number, payload?: Uint8Array): Promise<void> {
@@ -187,6 +208,7 @@ const CONFIG_FIELD_SPECS: ConfigFieldSpec[] = [
   { key: "psShortcutEnabled", fieldId: 0x0e, encode: (config) => boolByte(config.psShortcutEnabled) },
   { key: "disableMic", fieldId: 0x0f, encode: (config) => boolByte(config.disableMic) },
   { key: "disableSpeaker", fieldId: 0x10, encode: (config) => boolByte(config.disableSpeaker) },
+  { key: "enableWake", fieldId: 0x11, encode: (config) => boolByte(config.enableWake) },
 ];
 
 function commandReport(command: number, payload?: Uint8Array): Uint8Array<ArrayBuffer> {

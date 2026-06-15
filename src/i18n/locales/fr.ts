@@ -23,6 +23,7 @@ export const fr = {
     applying: "Application de la configuration",
     saving: "Sauvegarde dans la mémoire flash",
     reconnecting: "Reconnexion USB",
+    rebooting: "Redémarrage vers le bootloader",
     ready: "Prêt à se connecter",
     unsaved: "Modifications non sauvegardées",
     applied: "Appliqué à l’appareil",
@@ -99,7 +100,8 @@ export const fr = {
     audioBufferLength: "Taille du buffer audio",
     controllerMode: "Mode de la manette",
     disableUsbSn: "Désactiver le numéro de série USB",
-    psShortcutEnabled: "Bouton PS = Guide Xbox (uniquement disponible dans le firmware USBWake)",
+    psShortcutEnabled: "Bouton PS = Xbox Game Bar",
+    enableWake: "Réveiller le PC en veille avec le bouton PS",
     controllerModeOptions: {
       ds5: "DS5",
       dse: "DSE",
@@ -124,6 +126,8 @@ export const fr = {
       "Attendez que les modifications soient appliquées avant de sauvegarder",
     reconnect: "Reconnecter l’USB",
     reconnectTitle: "Envoyer la commande 0x03 via le rapport 0x80",
+    reboot: "Redémarrer vers le bootloader",
+    rebootTitle: "Envoyer la commande 0x07 via le rapport 0x80 — redémarre en mode BOOTSEL pour flasher le firmware ; le périphérique se déconnectera",
     reconnectRequired:
       "La fréquence d’interrogation ou le mode de la manette a changé. Cliquez sur Reconnecter l’USB pour appliquer les changements.",
     reset: "Réinitialiser par défaut",

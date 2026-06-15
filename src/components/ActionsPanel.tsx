@@ -1,4 +1,4 @@
-import { Download, Power, RefreshCw, RotateCcw, Save } from "lucide-react";
+import { Download, HardDriveDownload, Power, RefreshCw, RotateCcw, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +53,17 @@ export function ActionsPanel({ bridge, isBusy }: ActionsPanelProps) {
         >
           <Power size={17} />
           {t("actions.reconnect")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={bridge.rebootToBootloader}
+          disabled={!bridge.client || isBusy}
+          title={t("actions.rebootTitle")}
+        >
+          <HardDriveDownload size={17} />
+          {t("actions.reboot")}
         </Button>
         <Button
           type="button"

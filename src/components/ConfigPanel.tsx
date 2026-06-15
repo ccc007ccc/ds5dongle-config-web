@@ -189,6 +189,11 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
                   value={bridge.draft.psShortcutEnabled}
                   onChange={(value) => bridge.setDraftField("psShortcutEnabled", value)}
                 />
+                <ToggleControl
+                  label={t("config.enableWake")}
+                  value={bridge.draft.enableWake}
+                  onChange={(value) => bridge.setDraftField("enableWake", value)}
+                />
               </div>
             </section>
           </div>
