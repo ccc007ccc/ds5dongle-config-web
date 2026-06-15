@@ -20,7 +20,6 @@ const CMD_RECONNECT_USB = 0x03;
 const CMD_GET_CONFIG = 0x04;
 const CMD_GET_FIRMWARE_VERSION = 0x05;
 const CMD_GET_SIGNAL_STATUS = 0x06;
-const CMD_REBOOT_BOOTLOADER = 0x07;
 
 export interface SignalStatus {
   rssi: number | null;
@@ -119,11 +118,6 @@ export class Ds5BridgeHidClient {
   async reconnectUsb(): Promise<void> {
     await this.open();
     await this.enqueue(() => this.sendCommand(CMD_RECONNECT_USB));
-  }
-
-  async rebootToBootloader(): Promise<void> {
-    await this.open();
-    await this.enqueue(() => this.sendCommand(CMD_REBOOT_BOOTLOADER));
   }
 
   // Run an async task with exclusive access to the command/response reports.
