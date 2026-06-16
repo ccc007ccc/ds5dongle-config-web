@@ -40,8 +40,6 @@ export const zh = {
   footer: {
     title: "Pico2W DualSense 5 Bridge",
     description: "用于网页设置驱动：将 Raspberry Pi Pico2W 作为 DualSense (DS5) 控制器的无线适配器。",
-    configVersion: "CONFIG_VERSION {{version}}",
-    configVersionTitle: "网页支持的配置版本",
   },
   device: {
     label: "设备",

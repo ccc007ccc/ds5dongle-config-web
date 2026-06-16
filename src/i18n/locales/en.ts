@@ -40,8 +40,6 @@ export const en = {
   footer: {
     title: "Pico2W DualSense 5 Bridge",
     description: "Web setup driver for turning a Raspberry Pi Pico2W into a wireless adapter for the DualSense (DS5) controller.",
-    configVersion: "CONFIG_VERSION {{version}}",
-    configVersionTitle: "Web page supported config version",
   },
   device: {
     label: "Device",

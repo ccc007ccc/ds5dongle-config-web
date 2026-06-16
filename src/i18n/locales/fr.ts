@@ -45,8 +45,6 @@ export const fr = {
     title: "Pico2W DualSense 5 Bridge",
     description:
       "Pilote de configuration web permettant de transformer un Raspberry Pi Pico2W en adaptateur sans fil pour la manette DualSense (DS5).",
-    configVersion: "CONFIG_VERSION {{version}}",
-    configVersionTitle: "Version de configuration prise en charge par la page web",
   },
   device: {
     label: "Appareil",
