@@ -248,7 +248,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
           break;
         }
 
-        await nextClient.applyConfig(nextDraft, configRef.current);
+        await nextClient.applyConfig(nextDraft);
         configRef.current = nextDraft;
         setConfig(nextDraft);
         setNeedsUsbReconnect(usbEffectiveConfigChanged(usbEffectiveConfigRef.current, nextDraft));

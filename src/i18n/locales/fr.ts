@@ -33,7 +33,7 @@ export const fr = {
     webHidUnsupported:
       "WebHID est disponible sur les navigateurs basés sur Chromium via des origines sécurisées.",
     configVersionMismatch:
-      "Version de configuration incompatible : cette page prend en charge la version {{expected}}, l’appareil a renvoyé la version {{actual}}. La lecture et l’écriture par champ continuent ; certains champs récents peuvent être indisponibles.",
+      "Version de configuration incompatible : cette page prend en charge la version {{expected}}, l’appareil a renvoyé la version {{actual}}. Certains champs récents peuvent être indisponibles.",
   },
   pwa: {
     offlineReady:
@@ -117,16 +117,15 @@ export const fr = {
   actions: {
     title: "Actions",
     read: "Lire",
-    readTitle:
-      "Envoyer la commande 0x04 via le rapport 0x80 pour chaque champ, puis lire les champs depuis 0x81",
+    readTitle: "Lire la configuration actuelle depuis le rapport 0xF7",
     apply: "Appliquer à l’appareil",
-    applyTitle: "Envoyer la commande 0x01 via le rapport 0x80",
+    applyTitle: "Envoyer la commande 0x01 via le rapport 0xF6",
     save: "Sauvegarder dans la mémoire flash",
-    saveTitle: "Envoyer la commande 0x02 via le rapport 0x80",
+    saveTitle: "Envoyer la commande 0x02 via le rapport 0xF6",
     saveDirtyTitle:
       "Attendez que les modifications soient appliquées avant de sauvegarder",
     reconnect: "Reconnecter l’USB",
-    reconnectTitle: "Envoyer la commande 0x03 via le rapport 0x80",
+    reconnectTitle: "Envoyer la commande 0x03 via le rapport 0xF6",
     reconnectRequired:
       "La fréquence d’interrogation ou le mode de la manette a changé. Cliquez sur Reconnecter l’USB pour appliquer les changements.",
     reset: "Réinitialiser par défaut",

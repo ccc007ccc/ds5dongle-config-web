@@ -31,7 +31,7 @@ export const zh = {
   notice: {
     webHidUnsupported: "WebHID 仅在基于 Chromium 的浏览器与安全来源中可用。",
     configVersionMismatch:
-      "配置版本不匹配：网页支持版本 {{expected}}，设备返回版本 {{actual}}。已继续按字段读取与写入，部分新增字段可能不可用。",
+      "配置版本不匹配：网页支持版本 {{expected}}，设备返回版本 {{actual}}。部分新增字段可能不可用。",
   },
   pwa: {
     offlineReady: "网页已缓存，可离线访问",
@@ -104,14 +104,14 @@ export const zh = {
   actions: {
     title: "操作",
     read: "读取",
-    readTitle: "通过报告 0x80 逐项发送命令 0x04，并从 0x81 读取当前配置字段",
+    readTitle: "从报告 0xF7 读取当前配置",
     apply: "应用到设备",
-    applyTitle: "通过报告 0x80 发送命令 0x01",
+    applyTitle: "通过报告 0xF6 发送命令 0x01",
     save: "保存到 Flash",
-    saveTitle: "通过报告 0x80 发送命令 0x02",
+    saveTitle: "通过报告 0xF6 发送命令 0x02",
     saveDirtyTitle: "等待修改生效后再保存",
     reconnect: "重连 USB",
-    reconnectTitle: "通过报告 0x80 发送命令 0x03",
+    reconnectTitle: "通过报告 0xF6 发送命令 0x03",
     reconnectRequired: "轮询率模式、控制器模式或 USB 序列号设置已变更，请点击“重连 USB”后生效。",
     reset: "重置为默认值",
     resetTitle: "恢复默认配置，立即应用并保存到 Flash",

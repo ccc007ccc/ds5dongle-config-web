@@ -31,7 +31,7 @@ export const en = {
   notice: {
     webHidUnsupported: "WebHID is available in Chromium-based browsers on secure origins.",
     configVersionMismatch:
-      "Config version mismatch: this page supports version {{expected}}, device returned version {{actual}}. Field-based reads and writes will continue; some newer fields may be unavailable.",
+      "Config version mismatch: this page supports version {{expected}}, device returned version {{actual}}. Some newer fields may be unavailable.",
   },
   pwa: {
     offlineReady: "This page is cached and ready for offline access.",
@@ -104,14 +104,14 @@ export const en = {
   actions: {
     title: "Actions",
     read: "Read",
-    readTitle: "Send command 0x04 through report 0x80 for each field, then read config fields from 0x81",
+    readTitle: "Read current config from report 0xF7",
     apply: "Apply to Device",
-    applyTitle: "Send command 0x01 through report 0x80",
+    applyTitle: "Send command 0x01 through report 0xF6",
     save: "Save to Flash",
-    saveTitle: "Send command 0x02 through report 0x80",
+    saveTitle: "Send command 0x02 through report 0xF6",
     saveDirtyTitle: "Wait for changes to apply before saving",
     reconnect: "Reconnect USB",
-    reconnectTitle: "Send command 0x03 through report 0x80",
+    reconnectTitle: "Send command 0x03 through report 0xF6",
     reconnectRequired: "Polling rate, controller mode, or USB serial number changed. Click Reconnect USB for it to take effect.",
     reset: "Reset to Defaults",
     resetTitle: "Restore default config, apply it, and save it to flash",
