@@ -1,5 +1,5 @@
-export const CONFIG_BODY_VERSION = 5;
-export const CONFIG_BODY_SIZE = 18;
+export const CONFIG_BODY_VERSION = 6;
+export const CONFIG_BODY_SIZE = 19;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
@@ -20,6 +20,7 @@ export interface ConfigBody {
   disableMic: boolean;
   disableSpeaker: boolean;
   enableWake: boolean;
+  triggerReduce: number;
 }
 
 export interface ConfigValidationIssue {
@@ -41,6 +42,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   disableMic: false,
   disableSpeaker: false,
   enableWake: false,
+  triggerReduce: 0,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{
@@ -117,6 +119,7 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setUint8(15, config.disableMic ? 1 : 0);
   view.setUint8(16, config.disableSpeaker ? 1 : 0);
   view.setUint8(17, config.enableWake ? 1 : 0);
+  view.setUint8(18, config.triggerReduce);
   return bytes;
 }
 
@@ -159,6 +162,10 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
     issues.push({ field: "controllerMode" });
   }
 
+  if (!Number.isInteger(config.triggerReduce) || config.triggerReduce < 0 || config.triggerReduce > 7) {
+    issues.push({ field: "triggerReduce" });
+  }
+
   return issues;
 }
 
@@ -178,6 +185,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     disableMic: Boolean(config.disableMic),
     disableSpeaker: Boolean(config.disableSpeaker),
     enableWake: Boolean(config.enableWake),
+    triggerReduce: clampInteger(config.triggerReduce, 0, 7),
   };
 }
 
@@ -200,7 +208,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.psShortcutEnabled === right.psShortcutEnabled &&
     left.disableMic === right.disableMic &&
     left.disableSpeaker === right.disableSpeaker &&
-    left.enableWake === right.enableWake
+    left.enableWake === right.enableWake &&
+    left.triggerReduce === right.triggerReduce
   );
 }
 
@@ -249,6 +258,7 @@ function decodeAt(bytes: Uint8Array, offset: number): DecodedConfigCandidate | n
       disableMic: view.getUint8(15) === 1,
       disableSpeaker: view.getUint8(16) === 1,
       enableWake: view.getUint8(17) === 1,
+      triggerReduce: view.getUint8(18),
     },
   };
 }
