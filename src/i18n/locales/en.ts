@@ -34,6 +34,12 @@ export const en = {
   pwa: {
     offlineReady: "This page is cached and ready for offline access.",
     cacheRefresh: "A new version is available. Updating the page cache.",
+    refreshCache: "Refresh page cache",
+    refreshCacheTitle: "Clear the page cache and reload",
+    cacheRefreshing: "Refreshing the page cache",
+    cacheRefreshed: "Page cache refreshed. Reloading.",
+    cacheRefreshFailed: "Failed to refresh the page cache.",
+    cacheRefreshOffline: "The page cache cannot be refreshed while offline.",
   },
   footer: {
     title: "Pico2W DualSense 5 Bridge",

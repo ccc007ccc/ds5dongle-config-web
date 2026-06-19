@@ -34,6 +34,12 @@ export const zh = {
   pwa: {
     offlineReady: "网页已缓存，可离线访问",
     cacheRefresh: "检测到新版本，正在更新网页缓存",
+    refreshCache: "刷新网页缓存",
+    refreshCacheTitle: "清除网页缓存并重新加载页面",
+    cacheRefreshing: "正在刷新网页缓存",
+    cacheRefreshed: "网页缓存已刷新，正在重新加载",
+    cacheRefreshFailed: "网页缓存刷新失败",
+    cacheRefreshOffline: "离线状态无法刷新网页缓存",
   },
   footer: {
     title: "Pico2W DualSense 5 Bridge",
