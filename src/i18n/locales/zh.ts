@@ -146,7 +146,7 @@ export const zh = {
   errors: {
     invalidConfig: "设备返回了无效配置：{{issues}}",
     invalidBytes: "设备返回了 {{count}} 字节，期望至少 {{expected}} 字节",
-    configVersionMismatch: "配置版本不匹配：网页支持版本 {{expected}}，设备返回版本 {{actual}}",
+    configVersionMismatch: "配置版本不匹配：网页支持版本 {{expected}}，设备返回版本 {{actual}}\n请更新固件版本",
     noDeviceSelected: "未选择 DS5 Bridge 设备",
     unexpectedWebHid: "未知 WebHID 错误",
     disconnected: "设备已断开连接",

@@ -146,7 +146,7 @@ export const en = {
   errors: {
     invalidConfig: "Device returned invalid config: {{issues}}",
     invalidBytes: "Device returned {{count}} bytes, expected at least {{expected}}",
-    configVersionMismatch: "Config version mismatch: this page supports version {{expected}}, device returned version {{actual}}",
+    configVersionMismatch: "Config version mismatch: this page supports version {{expected}}, device returned version {{actual}}\nPlease update firmware.",
     noDeviceSelected: "No DS5 Bridge device was selected",
     unexpectedWebHid: "Unexpected WebHID error",
     disconnected: "Device disconnected",
