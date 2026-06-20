@@ -50,6 +50,7 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
                 disabled={controlsDisabled}
                 onChange={(value) => bridge.setDraftField("hapticsGain", value)}
               />
+              {/*
               <IntegerControl
                 label={t("config.speakerVolume")}
                 value={bridge.draft.speakerVolume}
@@ -70,6 +71,7 @@ export function ConfigPanel({ bridge }: ConfigPanelProps) {
                 disabled={controlsDisabled}
                 onChange={(value) => bridge.setDraftField("headsetVolume", value)}
               />
+              */}
               <IntegerControl
                 label={t("config.speakerGain")}
                 value={bridge.draft.speakerGain}
