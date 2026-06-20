@@ -35,7 +35,7 @@ export function ActionsPanel({ bridge, isBusy }: ActionsPanelProps) {
         </Button>
         <Button
           type="button"
-          className="h-auto w-full whitespace-normal bg-blue-600 py-2 text-white hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white hover:bg-blue-700"
           onClick={bridge.saveToFlash}
           disabled={!bridge.client || isBusy || bridge.isDirty}
           title={bridge.isDirty ? t("actions.saveDirtyTitle") : t("actions.saveTitle")}

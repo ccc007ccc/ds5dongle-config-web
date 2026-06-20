@@ -1,5 +1,5 @@
-export const CONFIG_BODY_VERSION = 4;
-export const CONFIG_BODY_SIZE = 21;
+export const CONFIG_BODY_VERSION = 5;
+export const CONFIG_BODY_SIZE = 19;
 export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
 
 export type PollingRateMode = 0 | 1 | 2;
@@ -9,20 +9,18 @@ export interface ConfigBody {
   hapticsGain: number;
   speakerVolume: number;
   headsetVolume: number;
-  syncSpeakerHeadsetVolume: boolean;
   speakerGain: number;
   inactiveTime: number;
-  disableInactiveDisconnect: boolean;
   disablePicoLed: boolean;
   pollingRateMode: PollingRateMode;
   audioBufferLength: number;
   controllerMode: ControllerMode;
-  lockVolume: boolean;
-  disableUsbSn: boolean;
+  enableUsbSn: boolean;
   psShortcutEnabled: boolean;
   disableMic: boolean;
   disableSpeaker: boolean;
   enableWake: boolean;
+  triggerReduce: number;
 }
 
 export interface ConfigValidationIssue {
@@ -33,20 +31,18 @@ export const DEFAULT_CONFIG: ConfigBody = {
   hapticsGain: 1,
   speakerVolume: 0,
   headsetVolume: 0,
-  syncSpeakerHeadsetVolume: true,
   speakerGain: 2,
   inactiveTime: 30,
-  disableInactiveDisconnect: false,
   disablePicoLed: false,
   pollingRateMode: 0,
   audioBufferLength: 64,
   controllerMode: 2,
-  lockVolume: false,
-  disableUsbSn: false,
+  enableUsbSn: false,
   psShortcutEnabled: false,
   disableMic: false,
   disableSpeaker: false,
   enableWake: false,
+  triggerReduce: 0,
 };
 
 export const POLLING_RATE_OPTIONS: Array<{
@@ -112,20 +108,18 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
   view.setFloat32(1, config.hapticsGain, true);
   view.setUint8(5, config.speakerVolume);
   view.setUint8(6, config.headsetVolume);
-  view.setUint8(7, config.syncSpeakerHeadsetVolume ? 1 : 0);
-  view.setUint8(8, config.speakerGain);
-  view.setUint8(9, config.inactiveTime);
-  view.setUint8(10, config.disableInactiveDisconnect ? 1 : 0);
-  view.setUint8(11, config.disablePicoLed ? 1 : 0);
-  view.setUint8(12, config.pollingRateMode);
-  view.setUint8(13, config.audioBufferLength);
-  view.setUint8(14, config.controllerMode);
-  view.setUint8(15, config.lockVolume ? 1 : 0);
-  view.setUint8(16, config.disableUsbSn ? 1 : 0);
-  view.setUint8(17, config.psShortcutEnabled ? 1 : 0);
-  view.setUint8(18, config.disableMic ? 1 : 0);
-  view.setUint8(19, config.disableSpeaker ? 1 : 0);
-  view.setUint8(20, config.enableWake ? 1 : 0);
+  view.setUint8(7, config.speakerGain);
+  view.setUint8(8, config.inactiveTime);
+  view.setUint8(9, config.disablePicoLed ? 1 : 0);
+  view.setUint8(10, config.pollingRateMode);
+  view.setUint8(11, config.audioBufferLength);
+  view.setUint8(12, config.controllerMode);
+  view.setUint8(13, config.enableUsbSn ? 1 : 0);
+  view.setUint8(14, config.psShortcutEnabled ? 1 : 0);
+  view.setUint8(15, config.disableMic ? 1 : 0);
+  view.setUint8(16, config.disableSpeaker ? 1 : 0);
+  view.setUint8(17, config.enableWake ? 1 : 0);
+  view.setUint8(18, config.triggerReduce);
   return bytes;
 }
 
@@ -148,7 +142,7 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
     issues.push({ field: "speakerGain" });
   }
 
-  if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 5 || config.inactiveTime > 60) {
+  if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 0 || config.inactiveTime > 60) {
     issues.push({ field: "inactiveTime" });
   }
 
@@ -159,7 +153,7 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (
     !Number.isInteger(config.audioBufferLength) ||
     config.audioBufferLength < 16 ||
-    config.audioBufferLength > 128
+    config.audioBufferLength > 127
   ) {
     issues.push({ field: "audioBufferLength" });
   }
@@ -168,30 +162,30 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
     issues.push({ field: "controllerMode" });
   }
 
+  if (!Number.isInteger(config.triggerReduce) || config.triggerReduce < 0 || config.triggerReduce > 10) {
+    issues.push({ field: "triggerReduce" });
+  }
+
   return issues;
 }
 
 export function normalizeConfig(config: ConfigBody): ConfigBody {
-  const speakerVolume = clampInteger(config.speakerVolume, 0, 127);
-
   return {
     hapticsGain: roundToStep(config.hapticsGain, 0.01),
-    speakerVolume,
-    headsetVolume: config.syncSpeakerHeadsetVolume ? speakerVolume : clampInteger(config.headsetVolume, 0, 127),
-    syncSpeakerHeadsetVolume: Boolean(config.syncSpeakerHeadsetVolume),
+    speakerVolume: clampInteger(config.speakerVolume, 0, 127),
+    headsetVolume: clampInteger(config.headsetVolume, 0, 127),
     speakerGain: clampInteger(config.speakerGain, 0, 7),
-    inactiveTime: clampInteger(config.inactiveTime, 5, 60),
-    disableInactiveDisconnect: Boolean(config.disableInactiveDisconnect),
+    inactiveTime: clampInteger(config.inactiveTime, 0, 60),
     disablePicoLed: Boolean(config.disablePicoLed),
     pollingRateMode: clampInteger(config.pollingRateMode, 0, 2) as PollingRateMode,
-    audioBufferLength: clampInteger(config.audioBufferLength, 16, 128),
+    audioBufferLength: clampInteger(config.audioBufferLength, 16, 127),
     controllerMode: clampInteger(config.controllerMode, 0, 2) as ControllerMode,
-    lockVolume: Boolean(config.lockVolume),
-    disableUsbSn: Boolean(config.disableUsbSn),
+    enableUsbSn: Boolean(config.enableUsbSn),
     psShortcutEnabled: Boolean(config.psShortcutEnabled),
     disableMic: Boolean(config.disableMic),
     disableSpeaker: Boolean(config.disableSpeaker),
     enableWake: Boolean(config.enableWake),
+    triggerReduce: clampInteger(config.triggerReduce, 0, 10),
   };
 }
 
@@ -204,20 +198,18 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     Math.abs(left.hapticsGain - right.hapticsGain) < 0.001 &&
     left.speakerVolume === right.speakerVolume &&
     left.headsetVolume === right.headsetVolume &&
-    left.syncSpeakerHeadsetVolume === right.syncSpeakerHeadsetVolume &&
     left.speakerGain === right.speakerGain &&
     left.inactiveTime === right.inactiveTime &&
-    left.disableInactiveDisconnect === right.disableInactiveDisconnect &&
     left.disablePicoLed === right.disablePicoLed &&
     left.pollingRateMode === right.pollingRateMode &&
     left.audioBufferLength === right.audioBufferLength &&
     left.controllerMode === right.controllerMode &&
-    left.lockVolume === right.lockVolume &&
-    left.disableUsbSn === right.disableUsbSn &&
+    left.enableUsbSn === right.enableUsbSn &&
     left.psShortcutEnabled === right.psShortcutEnabled &&
     left.disableMic === right.disableMic &&
     left.disableSpeaker === right.disableSpeaker &&
-    left.enableWake === right.enableWake
+    left.enableWake === right.enableWake &&
+    left.triggerReduce === right.triggerReduce
   );
 }
 
@@ -255,20 +247,18 @@ function decodeAt(bytes: Uint8Array, offset: number): DecodedConfigCandidate | n
       hapticsGain: view.getFloat32(1, true),
       speakerVolume: view.getUint8(5),
       headsetVolume: view.getUint8(6),
-      syncSpeakerHeadsetVolume: view.getUint8(7) === 1,
-      speakerGain: view.getUint8(8),
-      inactiveTime: view.getUint8(9),
-      disableInactiveDisconnect: view.getUint8(10) === 1,
-      disablePicoLed: view.getUint8(11) === 1,
-      pollingRateMode: view.getUint8(12) as PollingRateMode,
-      audioBufferLength: view.getUint8(13),
-      controllerMode: view.getUint8(14) as ControllerMode,
-      lockVolume: view.getUint8(15) === 1,
-      disableUsbSn: view.getUint8(16) === 1,
-      psShortcutEnabled: view.getUint8(17) === 1,
-      disableMic: view.getUint8(18) === 1,
-      disableSpeaker: view.getUint8(19) === 1,
-      enableWake: view.getUint8(20) === 1,
+      speakerGain: view.getUint8(7),
+      inactiveTime: view.getUint8(8),
+      disablePicoLed: view.getUint8(9) === 1,
+      pollingRateMode: view.getUint8(10) as PollingRateMode,
+      audioBufferLength: view.getUint8(11),
+      controllerMode: view.getUint8(12) as ControllerMode,
+      enableUsbSn: view.getUint8(13) === 1,
+      psShortcutEnabled: view.getUint8(14) === 1,
+      disableMic: view.getUint8(15) === 1,
+      disableSpeaker: view.getUint8(16) === 1,
+      enableWake: view.getUint8(17) === 1,
+      triggerReduce: view.getUint8(18),
     },
   };
 }

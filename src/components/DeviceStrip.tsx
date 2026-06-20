@@ -2,7 +2,7 @@ import { Power, Usb } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { SignalStatus } from "@/protocol/ds5BridgeHid";
+import type { AudioActivityState } from "../protocol/ds5BridgeHid";
 
 interface DeviceStripProps {
   authorizedDevices: HIDDevice[];
@@ -10,7 +10,7 @@ interface DeviceStripProps {
   deviceLabel: string;
   firmwareVersion: string | null;
   signalStrengthRssi: number | null;
-  signalStatus: SignalStatus;
+  audioActivity: AudioActivityState | null;
   isBusy: boolean;
   supported: boolean;
   onConnect: () => void;
@@ -23,7 +23,7 @@ export function DeviceStrip({
   deviceLabel,
   firmwareVersion,
   signalStrengthRssi,
-  signalStatus,
+  audioActivity,
   isBusy,
   supported,
   onConnect,
@@ -52,10 +52,14 @@ export function DeviceStrip({
                   <span>{t("device.signalStrength")}</span>
                   <code>{formatSignalStrength(signalStrengthRssi, t)}</code>
                 </span>
-                <span className="device-metadata-item" title={t("device.audioActivityTitle")}>
-                  <span>{t("device.audioActivity")}</span>
-                  <code>{formatAudioActivity(signalStatus, t)}</code>
-                </span>
+                {audioActivity && (
+                  <span className="device-metadata-item device-audio-activity">
+                    <span>{t("device.audioSpeaker")}</span>
+                    <code>{audioActivity.speakerActive ? t("device.audioActive") : t("device.audioInactive")}</code>
+                    <span>{t("device.audioMicrophone")}</span>
+                    <code>{audioActivity.micActive ? t("device.audioActive") : t("device.audioInactive")}</code>
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -93,19 +97,4 @@ function formatSignalStrength(
   t: (key: string) => string,
 ): string {
   return signalStrengthRssi === null ? t("device.signalStrengthUnknown") : `${signalStrengthRssi} dBm`;
-}
-
-function formatAudioActivity(signalStatus: SignalStatus, t: (key: string) => string): string {
-  if (signalStatus.micActive === null || signalStatus.speakerActive === null) {
-    return t("device.audioActivityUnknown");
-  }
-
-  return [
-    `${t("device.micLabel")} ${formatActiveState(signalStatus.micActive, t)}`,
-    `${t("device.speakerLabel")} ${formatActiveState(signalStatus.speakerActive, t)}`,
-  ].join(" · ");
-}
-
-function formatActiveState(active: boolean, t: (key: string) => string): string {
-  return active ? t("device.active") : t("device.inactive");
 }

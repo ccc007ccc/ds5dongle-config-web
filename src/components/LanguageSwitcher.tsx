@@ -1,33 +1,24 @@
 import { Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const LANGUAGES = [
-  { value: "en", label: "EN" },
-  { value: "fr", label: "FR" },
-  { value: "zh", label: "中文" },
-];
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
-  const resolved = i18n.resolvedLanguage ?? "en";
-  const currentLanguage = LANGUAGES.find((l) => resolved.startsWith(l.value))?.value ?? "en";
+  const currentLanguage = i18n.resolvedLanguage?.startsWith("zh") ? "zh" : "en";
 
   return (
     <div className="language-switcher" aria-label={t("language.label")}>
       <Languages size={16} />
-      <Select value={currentLanguage} onValueChange={(language) => void i18n.changeLanguage(language)}>
-        <SelectTrigger className="h-9 w-[80px] text-xs font-bold">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {LANGUAGES.map((lang) => (
-            <SelectItem key={lang.value} value={lang.value} className="text-xs font-bold">
-              {lang.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Tabs value={currentLanguage} onValueChange={(language) => void i18n.changeLanguage(language)}>
+        <TabsList className="grid h-9 w-[132px] grid-cols-2">
+          <TabsTrigger value="en" className="h-7 text-xs font-bold">
+            EN
+          </TabsTrigger>
+          <TabsTrigger value="zh" className="h-7 text-xs font-bold">
+            中文
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </div>
   );
 }

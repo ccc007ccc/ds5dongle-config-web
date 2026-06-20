@@ -10,6 +10,8 @@ export const SUPPORTED_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
 export const NO_DEVICE_SELECTED_ERROR = "noDeviceSelected";
 export const WEBHID_UNAVAILABLE_ERROR = "webHidUnavailable";
 
+const GENERIC_DESKTOP_USAGE_PAGE = 0x01;
+const GAMEPAD_USAGE = 0x05;
 const REPORT_SET_CONFIG = 0xf6;
 const REPORT_GET_CONFIG = 0xf7;
 const REPORT_GET_FIRMWARE_VERSION = 0xf8;
@@ -18,27 +20,25 @@ const CMD_UPDATE_CONFIG = 0x01;
 const CMD_SAVE_TO_FLASH = 0x02;
 const CMD_RECONNECT_USB = 0x03;
 
-export interface SignalStatus {
+export interface AudioActivityState {
+  speakerActive: boolean;
+  micActive: boolean;
+}
+
+export interface SignalStrengthReport {
   rssi: number | null;
-  micActive: boolean | null;
-  speakerActive: boolean | null;
-}
-
-export interface ConfigVersionWarning {
-  actual: number;
-  expected: number;
-}
-
-export interface ConfigReadResult {
-  config: ConfigBody;
-  versionWarning: ConfigVersionWarning | null;
+  audioActivity: AudioActivityState | null;
 }
 
 export class Ds5BridgeHidClient {
   constructor(public readonly device: HIDDevice) {}
 
   static isSupportedDevice(device: HIDDevice): boolean {
-    return device.vendorId === SONY_VENDOR_ID && SUPPORTED_PRODUCT_IDS.includes(device.productId as 0x0ce6 | 0x0df2);
+    return (
+      device.vendorId === SONY_VENDOR_ID &&
+      SUPPORTED_PRODUCT_IDS.includes(device.productId as 0x0ce6 | 0x0df2) &&
+      device.collections.some(isGamepadCollection)
+    );
   }
 
   static async requestDevice(): Promise<Ds5BridgeHidClient> {
@@ -47,6 +47,8 @@ export class Ds5BridgeHidClient {
       filters: SUPPORTED_PRODUCT_IDS.map((productId) => ({
         vendorId: SONY_VENDOR_ID,
         productId,
+        usagePage: GENERIC_DESKTOP_USAGE_PAGE,
+        usage: GAMEPAD_USAGE,
       })),
     });
 
@@ -75,10 +77,10 @@ export class Ds5BridgeHidClient {
     }
   }
 
-  async readConfig(): Promise<ConfigReadResult> {
+  async readConfig(): Promise<ConfigBody> {
     await this.open();
     const report = await this.device.receiveFeatureReport(REPORT_GET_CONFIG);
-    return { config: decodeConfigBody(report), versionWarning: null };
+    return decodeConfigBody(report);
   }
 
   async readFirmwareVersion(): Promise<string> {
@@ -87,10 +89,10 @@ export class Ds5BridgeHidClient {
     return decodeFirmwareVersion(report);
   }
 
-  async readSignalStatus(): Promise<SignalStatus> {
+  async readSignalStrength(): Promise<SignalStrengthReport> {
     await this.open();
     const report = await this.device.receiveFeatureReport(REPORT_GET_SIGNAL_STRENGTH);
-    return decodeSignalStatus(report);
+    return decodeSignalStrength(report);
   }
 
   async applyConfig(config: ConfigBody): Promise<void> {
@@ -133,6 +135,10 @@ function getHid(): HID {
   return navigator.hid;
 }
 
+function isGamepadCollection(collection: HIDCollectionInfo): boolean {
+  return collection.usagePage === GENERIC_DESKTOP_USAGE_PAGE && collection.usage === GAMEPAD_USAGE;
+}
+
 function commandReport(command: number): Uint8Array<ArrayBuffer> {
   const report = new Uint8Array(new ArrayBuffer(FEATURE_REPORT_PAYLOAD_SIZE));
   report[0] = command;
@@ -162,36 +168,48 @@ function decodePrintableString(bytes: Uint8Array): string {
   return /^[\x20-\x7e]+$/.test(text) ? text : "";
 }
 
-function decodeSignalStatus(source: ArrayBuffer | DataView | Uint8Array): SignalStatus {
+function decodeSignalStrength(source: ArrayBuffer | DataView | Uint8Array): SignalStrengthReport {
   const bytes = toUint8Array(source);
-  const offsets = bytes[0] === REPORT_GET_SIGNAL_STRENGTH ? [1, 0] : [0, 1];
+  const offsets = bytes[0] === REPORT_GET_SIGNAL_STRENGTH ? [1, 0] : [0];
+  const candidates = offsets
+    .filter((offset) => offset < bytes.length)
+    .map((offset) => decodeSignalStrengthAtOffset(bytes, offset))
+    .filter((candidate) => candidate.rssi !== null);
 
-  for (const offset of offsets) {
-    if (offset >= bytes.length) {
-      continue;
-    }
-
-    const rssi = decodeRssiByte(bytes[offset]);
-    if (rssi === null) {
-      continue;
-    }
-
-    const flags = offset + 1 < bytes.length ? bytes[offset + 1] : null;
-    const hasAudioFlags = flags !== null && (flags & 0x80) === 0x80;
-
-    return {
-      rssi,
-      micActive: hasAudioFlags ? (flags & 0x01) === 0x01 : null,
-      speakerActive: hasAudioFlags ? (flags & 0x02) === 0x02 : null,
-    };
+  const candidateWithAudioActivity = candidates.find((candidate) => candidate.audioActivity);
+  if (candidateWithAudioActivity) {
+    return candidateWithAudioActivity;
   }
 
-  return { rssi: null, micActive: null, speakerActive: null };
+  const preferredCandidate = candidates[0];
+  if (preferredCandidate) {
+    return preferredCandidate;
+  }
+
+  return {
+    rssi: null,
+    audioActivity: null,
+  };
 }
 
-function decodeRssiByte(byte: number): number | null {
-  const value = toInt8(byte);
-  return value >= -128 && value <= 0 ? value : null;
+function decodeSignalStrengthAtOffset(bytes: Uint8Array, offset: number): SignalStrengthReport {
+  const rssi = toInt8(bytes[offset]);
+  const flags = bytes[offset + 1];
+
+  return {
+    rssi: rssi >= -128 && rssi <= 0 ? rssi : null,
+    audioActivity:
+      flags === undefined || !isAudioActivityFlags(flags)
+        ? null
+        : {
+            speakerActive: Boolean(flags & 0x02),
+            micActive: Boolean(flags & 0x01),
+          },
+  };
+}
+
+function isAudioActivityFlags(flags: number): boolean {
+  return (flags & 0x80) !== 0 && (flags & 0x7c) === 0;
 }
 
 function toInt8(byte: number): number {

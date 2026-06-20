@@ -1,14 +1,18 @@
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CONTROLLER_MODE_OPTIONS, ControllerMode } from "../../protocol/config";
+import { ConfigHelpButton } from "./ConfigHelpButton";
 
 interface ControllerModeControlProps {
   value: ControllerMode;
+  helpContent?: string;
+  disabled?: boolean;
   onChange: (value: ControllerMode) => void;
 }
 
-export function ControllerModeControl({ value, onChange }: ControllerModeControlProps) {
+export function ControllerModeControl({ value, helpContent, disabled = false, onChange }: ControllerModeControlProps) {
   const { t } = useTranslation();
+  const label = t("config.controllerMode");
   const optionLabels: Record<ControllerMode, string> = {
     0: t("config.controllerModeOptions.ds5"),
     1: t("config.controllerModeOptions.dse"),
@@ -16,16 +20,28 @@ export function ControllerModeControl({ value, onChange }: ControllerModeControl
   };
 
   return (
-    <div className="control-row">
-      <strong>{t("config.controllerMode")}</strong>
+    <div className="control-row" aria-disabled={disabled}>
+      <span className="control-label">
+        <strong>{label}</strong>
+        {helpContent && <ConfigHelpButton title={label} content={helpContent} />}
+      </span>
       <Tabs
         value={String(value)}
-        onValueChange={(next) => onChange(Number(next) as ControllerMode)}
+        onValueChange={(next) => {
+          if (!disabled) {
+            onChange(Number(next) as ControllerMode);
+          }
+        }}
         className="w-full"
       >
         <TabsList className="grid h-10 w-full grid-cols-3">
           {CONTROLLER_MODE_OPTIONS.map((option) => (
-            <TabsTrigger key={option.value} value={String(option.value)} className="h-8 text-sm font-bold">
+            <TabsTrigger
+              key={option.value}
+              value={String(option.value)}
+              disabled={disabled}
+              className="h-8 text-sm font-bold"
+            >
               {optionLabels[option.value]}
             </TabsTrigger>
           ))}

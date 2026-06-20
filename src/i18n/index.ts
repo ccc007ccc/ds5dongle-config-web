@@ -9,7 +9,7 @@ void i18n
   .init({
     resources,
     fallbackLng: "en",
-    supportedLngs: ["en", "fr", "zh"],
+    supportedLngs: ["en", "zh"],
     load: "languageOnly",
     detection: {
       order: ["localStorage", "navigator", "htmlTag"],
@@ -23,19 +23,17 @@ void i18n
     },
   });
 
-const normalizeLang = (language: string | undefined): string => {
-  if (language?.startsWith("zh")) return "zh-CN";
-  if (language?.startsWith("fr")) return "fr";
-  return "en";
-};
+i18n.on("languageChanged", (language) => {
+  const normalizedLanguage = language.startsWith("zh") ? "zh-CN" : "en";
 
-i18n.on("languageChanged", (language: string) => {
-  document.documentElement.lang = normalizeLang(language);
+  document.documentElement.lang = normalizedLanguage;
   document.documentElement.translate = false;
 });
 
 void i18n.loadNamespaces([]).then(() => {
-  document.documentElement.lang = normalizeLang(i18n.resolvedLanguage);
+  const normalizedLanguage = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
+
+  document.documentElement.lang = normalizedLanguage;
   document.documentElement.translate = false;
 });
 
