@@ -43,7 +43,7 @@ export const zh = {
     cacheRefreshDeclined: "已保持当前网页版本",
     updatePromptTitle: "网页更新",
     updatePromptMessage:
-      "检测到网页更新，是否进行更新？注意：如果你正在使用旧版本的DS5Dongle固件，更新后的网页可能会不适配旧版本",
+      "检测到网页更新，是否进行更新？\n注意：如果你正在使用旧版本的DS5Dongle固件，更新后的网页可能会不适配旧版本",
     updatePromptConfirm: "是",
     updatePromptCancel: "否",
   },
@@ -118,7 +118,7 @@ export const zh = {
       disablePicoLed: "关闭常亮的 PICO LED 灯。但是手柄低电量时仍会闪烁",
       disableMic: "关闭麦克风",
       disableSpeaker: "关闭扬声器",
-      enableWake: "开启 USB 唤醒",
+      enableWake: "开启 USB 唤醒。\n注意：开启后 USB 会一直保持常连状态",
       pollingRateMode: "开启实时模式可能会有陀螺仪抽搐的问题。推荐 500Hz",
       controllerMode: "TODO: 在这里填写控制器模式说明。",
       enableUsbSn: "TODO: 在这里填写 USB 序列号说明。",
