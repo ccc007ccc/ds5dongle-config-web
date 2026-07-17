@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: "prompt",
       includeAssets: ["pwa-icon.svg", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "DS5 Bridge Config",
-        short_name: "DS5 Config",
-        description: "DS5 Bridge HID device configuration tool with offline access.",
+        name: "M61 DualSense Configurator",
+        short_name: "M61 Config",
+        description: "M61 BL616/BL618 DualSense dongle configuration and diagnostics.",
         theme_color: "#111827",
         background_color: "#f5f7fa",
         display: "standalone",

@@ -10,9 +10,9 @@ export function AppFooter() {
         <strong>{t("footer.title")}</strong>
         <span>{t("footer.description")}</span>
       </div>
-      <a className="footer-link" href="https://github.com/awalol/DS5Dongle" target="_blank" rel="noopener noreferrer">
+      <a className="footer-link" href="https://github.com/ccc007ccc/DS5Dongle" target="_blank" rel="noopener noreferrer">
         <GitBranch size={16} />
-        github.com/awalol/DS5Dongle
+        github.com/ccc007ccc/DS5Dongle
       </a>
     </footer>
   );

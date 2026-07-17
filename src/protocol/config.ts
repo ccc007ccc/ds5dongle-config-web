@@ -1,215 +1,99 @@
-export const CONFIG_BODY_VERSION = 5;
-export const CONFIG_BODY_SIZE = 19;
-export const FEATURE_REPORT_PAYLOAD_SIZE = 63;
+import {
+  M61Capability,
+  M61_CONFIG_BODY_SIZE,
+  M61_FEATURE_PAYLOAD_SIZE,
+  decodeM61Config,
+  encodeM61Config,
+  M61ProtocolError,
+  type M61Config,
+} from "./m61Management";
 
-export type PollingRateMode = 0 | 1 | 2;
-export type ControllerMode = 0 | 1 | 2;
-
-export interface ConfigBody {
-  hapticsGain: number;
-  speakerVolume: number;
-  headsetVolume: number;
-  speakerGain: number;
-  inactiveTime: number;
-  disablePicoLed: boolean;
-  pollingRateMode: PollingRateMode;
-  audioBufferLength: number;
-  controllerMode: ControllerMode;
-  enableUsbSn: boolean;
-  psShortcutEnabled: boolean;
-  disableMic: boolean;
-  disableSpeaker: boolean;
-  enableWake: boolean;
-  triggerReduce: number;
-}
+export const CONFIG_BODY_VERSION = 1;
+export const CONFIG_BODY_SIZE = M61_CONFIG_BODY_SIZE;
+export const FEATURE_REPORT_PAYLOAD_SIZE = M61_FEATURE_PAYLOAD_SIZE;
+export type ConfigBody = M61Config;
+export { M61ProtocolError as ConfigDecodeError };
 
 export interface ConfigValidationIssue {
   field: keyof ConfigBody;
 }
 
 export const DEFAULT_CONFIG: ConfigBody = {
-  hapticsGain: 1,
-  speakerVolume: 0,
-  headsetVolume: 0,
-  speakerGain: 2,
-  inactiveTime: 30,
-  disablePicoLed: false,
-  pollingRateMode: 0,
-  audioBufferLength: 64,
-  controllerMode: 2,
-  enableUsbSn: false,
-  psShortcutEnabled: false,
-  disableMic: false,
-  disableSpeaker: false,
-  enableWake: false,
-  triggerReduce: 0,
+  capabilities: M61Capability.Dvfs | M61Capability.TelemetryV1,
+  microphoneEnabled: false,
+  speakerEnabled: true,
+  autoReconnectEnabled: true,
+  statusLedEnabled: true,
+  speakerRoute: 0,
+  cpuGovernor: 0,
+  cpuProfile: 0,
+  manualCpuMhz: 320,
+  hapticsGainQ8: 0x0100,
 };
 
-export const POLLING_RATE_OPTIONS: Array<{
-  value: PollingRateMode;
-  label: string;
-}> = [
-  { value: 0, label: "250 Hz" },
-  { value: 1, label: "500 Hz" },
-  { value: 2, label: "Real-Time" },
-];
-
-export const CONTROLLER_MODE_OPTIONS: Array<{
-  value: ControllerMode;
-}> = [
-  { value: 0 },
-  { value: 1 },
-  { value: 2 },
-];
-
 export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): ConfigBody {
-  const bytes = toUint8Array(source);
-  const candidates = bytes.byteLength >= CONFIG_BODY_SIZE + 1 ? [0, 1] : [0];
-  const parsed = candidates
-    .map((offset) => decodeAt(bytes, offset))
-    .filter((candidate): candidate is DecodedConfigCandidate => Boolean(candidate));
-  const versionMatched = parsed.filter(({ version }) => version === CONFIG_BODY_VERSION);
-  const valid = versionMatched.find(({ config }) => validateConfig(config).length === 0);
-
-  if (valid) {
-    return valid.config;
-  }
-
-  if (versionMatched[0]) {
-    throw new ConfigDecodeError("invalidConfig", {
-      issues: validateConfig(versionMatched[0].config).map((issue) => issue.field),
-    });
-  }
-
-  if (parsed[0]) {
-    throw new ConfigDecodeError("versionMismatch", {
-      actual: uniqueVersions(parsed.map(({ version }) => version)).join(", "),
-      expected: CONFIG_BODY_VERSION,
-    });
-  }
-
-  throw new ConfigDecodeError("invalidBytes", {
-    count: bytes.byteLength,
-    expected: CONFIG_BODY_SIZE,
-  });
+  return decodeM61Config(source);
 }
 
 export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
-  const issues = validateConfig(config);
-  if (issues.length > 0) {
-    throw new ConfigDecodeError("invalidConfig", {
-      issues: issues.map((issue) => issue.field),
-    });
-  }
+  return encodeM61Config(config);
+}
 
-  const bytes = new Uint8Array(new ArrayBuffer(CONFIG_BODY_SIZE));
-  const view = new DataView(bytes.buffer);
-  view.setUint8(0, CONFIG_BODY_VERSION);
-  view.setFloat32(1, config.hapticsGain, true);
-  view.setUint8(5, config.speakerVolume);
-  view.setUint8(6, config.headsetVolume);
-  view.setUint8(7, config.speakerGain);
-  view.setUint8(8, config.inactiveTime);
-  view.setUint8(9, config.disablePicoLed ? 1 : 0);
-  view.setUint8(10, config.pollingRateMode);
-  view.setUint8(11, config.audioBufferLength);
-  view.setUint8(12, config.controllerMode);
-  view.setUint8(13, config.enableUsbSn ? 1 : 0);
-  view.setUint8(14, config.psShortcutEnabled ? 1 : 0);
-  view.setUint8(15, config.disableMic ? 1 : 0);
-  view.setUint8(16, config.disableSpeaker ? 1 : 0);
-  view.setUint8(17, config.enableWake ? 1 : 0);
-  view.setUint8(18, config.triggerReduce);
-  return bytes;
+export function hasCapability(config: ConfigBody, capability: number): boolean {
+  return (config.capabilities & capability) === capability;
 }
 
 export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   const issues: ConfigValidationIssue[] = [];
-
-  if (!Number.isFinite(config.hapticsGain) || config.hapticsGain < 1 || config.hapticsGain > 2) {
-    issues.push({ field: "hapticsGain" });
+  if (!Number.isInteger(config.capabilities) || config.capabilities < 0 || config.capabilities > 0xffff) {
+    issues.push({ field: "capabilities" });
   }
-
-  if (!Number.isInteger(config.speakerVolume) || config.speakerVolume < 0 || config.speakerVolume > 127) {
-    issues.push({ field: "speakerVolume" });
+  if (!Number.isInteger(config.speakerRoute) || config.speakerRoute < 0 || config.speakerRoute > 2) {
+    issues.push({ field: "speakerRoute" });
   }
-
-  if (!Number.isInteger(config.headsetVolume) || config.headsetVolume < 0 || config.headsetVolume > 127) {
-    issues.push({ field: "headsetVolume" });
+  if (!Number.isInteger(config.cpuGovernor) || config.cpuGovernor < 0 || config.cpuGovernor > 1) {
+    issues.push({ field: "cpuGovernor" });
   }
-
-  if (!Number.isInteger(config.speakerGain) || config.speakerGain < 0 || config.speakerGain > 7) {
-    issues.push({ field: "speakerGain" });
+  if (!Number.isInteger(config.cpuProfile) || config.cpuProfile < 0 || config.cpuProfile > 3) {
+    issues.push({ field: "cpuProfile" });
   }
-
-  if (!Number.isInteger(config.inactiveTime) || config.inactiveTime < 0 || config.inactiveTime > 60) {
-    issues.push({ field: "inactiveTime" });
+  if (!Number.isInteger(config.manualCpuMhz) || config.manualCpuMhz < 320 || config.manualCpuMhz > 400) {
+    issues.push({ field: "manualCpuMhz" });
   }
-
-  if (!Number.isInteger(config.pollingRateMode) || config.pollingRateMode < 0 || config.pollingRateMode > 2) {
-    issues.push({ field: "pollingRateMode" });
+  if (!Number.isInteger(config.hapticsGainQ8) || config.hapticsGainQ8 < 0x0100 || config.hapticsGainQ8 > 0x0200) {
+    issues.push({ field: "hapticsGainQ8" });
   }
-
-  if (
-    !Number.isInteger(config.audioBufferLength) ||
-    config.audioBufferLength < 16 ||
-    config.audioBufferLength > 127
-  ) {
-    issues.push({ field: "audioBufferLength" });
-  }
-
-  if (!Number.isInteger(config.controllerMode) || config.controllerMode < 0 || config.controllerMode > 2) {
-    issues.push({ field: "controllerMode" });
-  }
-
-  if (!Number.isInteger(config.triggerReduce) || config.triggerReduce < 0 || config.triggerReduce > 10) {
-    issues.push({ field: "triggerReduce" });
-  }
-
   return issues;
 }
 
 export function normalizeConfig(config: ConfigBody): ConfigBody {
   return {
-    hapticsGain: roundToStep(config.hapticsGain, 0.01),
-    speakerVolume: clampInteger(config.speakerVolume, 0, 127),
-    headsetVolume: clampInteger(config.headsetVolume, 0, 127),
-    speakerGain: clampInteger(config.speakerGain, 0, 7),
-    inactiveTime: clampInteger(config.inactiveTime, 0, 60),
-    disablePicoLed: Boolean(config.disablePicoLed),
-    pollingRateMode: clampInteger(config.pollingRateMode, 0, 2) as PollingRateMode,
-    audioBufferLength: clampInteger(config.audioBufferLength, 16, 127),
-    controllerMode: clampInteger(config.controllerMode, 0, 2) as ControllerMode,
-    enableUsbSn: Boolean(config.enableUsbSn),
-    psShortcutEnabled: Boolean(config.psShortcutEnabled),
-    disableMic: Boolean(config.disableMic),
-    disableSpeaker: Boolean(config.disableSpeaker),
-    enableWake: Boolean(config.enableWake),
-    triggerReduce: clampInteger(config.triggerReduce, 0, 10),
+    capabilities: clampInteger(config.capabilities, 0, 0xffff),
+    microphoneEnabled: Boolean(config.microphoneEnabled),
+    speakerEnabled: Boolean(config.speakerEnabled),
+    autoReconnectEnabled: Boolean(config.autoReconnectEnabled),
+    statusLedEnabled: Boolean(config.statusLedEnabled),
+    speakerRoute: clampInteger(config.speakerRoute, 0, 2) as ConfigBody["speakerRoute"],
+    cpuGovernor: clampInteger(config.cpuGovernor, 0, 1) as ConfigBody["cpuGovernor"],
+    cpuProfile: clampInteger(config.cpuProfile, 0, 3) as ConfigBody["cpuProfile"],
+    manualCpuMhz: clampInteger(config.manualCpuMhz, 320, 400),
+    hapticsGainQ8: clampInteger(config.hapticsGainQ8, 0x0100, 0x0200),
   };
 }
 
 export function configsEqual(left: ConfigBody | null, right: ConfigBody | null): boolean {
-  if (!left || !right) {
-    return left === right;
-  }
-
+  if (!left || !right) return left === right;
   return (
-    Math.abs(left.hapticsGain - right.hapticsGain) < 0.001 &&
-    left.speakerVolume === right.speakerVolume &&
-    left.headsetVolume === right.headsetVolume &&
-    left.speakerGain === right.speakerGain &&
-    left.inactiveTime === right.inactiveTime &&
-    left.disablePicoLed === right.disablePicoLed &&
-    left.pollingRateMode === right.pollingRateMode &&
-    left.audioBufferLength === right.audioBufferLength &&
-    left.controllerMode === right.controllerMode &&
-    left.enableUsbSn === right.enableUsbSn &&
-    left.psShortcutEnabled === right.psShortcutEnabled &&
-    left.disableMic === right.disableMic &&
-    left.disableSpeaker === right.disableSpeaker &&
-    left.enableWake === right.enableWake &&
-    left.triggerReduce === right.triggerReduce
+    left.capabilities === right.capabilities &&
+    left.microphoneEnabled === right.microphoneEnabled &&
+    left.speakerEnabled === right.speakerEnabled &&
+    left.autoReconnectEnabled === right.autoReconnectEnabled &&
+    left.statusLedEnabled === right.statusLedEnabled &&
+    left.speakerRoute === right.speakerRoute &&
+    left.cpuGovernor === right.cpuGovernor &&
+    left.cpuProfile === right.cpuProfile &&
+    left.manualCpuMhz === right.manualCpuMhz &&
+    left.hapticsGainQ8 === right.hapticsGainQ8
   );
 }
 
@@ -218,69 +102,6 @@ export function fieldIssue(
   field: keyof ConfigBody,
 ): ConfigValidationIssue | undefined {
   return issues.find((issue) => issue.field === field);
-}
-
-export class ConfigDecodeError extends Error {
-  constructor(
-    public readonly code: "invalidConfig" | "invalidBytes" | "versionMismatch",
-    public readonly values: Record<string, unknown>,
-  ) {
-    super(code);
-    this.name = "ConfigDecodeError";
-  }
-}
-
-interface DecodedConfigCandidate {
-  version: number;
-  config: ConfigBody;
-}
-
-function decodeAt(bytes: Uint8Array, offset: number): DecodedConfigCandidate | null {
-  if (bytes.byteLength - offset < CONFIG_BODY_SIZE) {
-    return null;
-  }
-
-  const view = new DataView(bytes.buffer, bytes.byteOffset + offset, CONFIG_BODY_SIZE);
-  return {
-    version: view.getUint8(0),
-    config: {
-      hapticsGain: view.getFloat32(1, true),
-      speakerVolume: view.getUint8(5),
-      headsetVolume: view.getUint8(6),
-      speakerGain: view.getUint8(7),
-      inactiveTime: view.getUint8(8),
-      disablePicoLed: view.getUint8(9) === 1,
-      pollingRateMode: view.getUint8(10) as PollingRateMode,
-      audioBufferLength: view.getUint8(11),
-      controllerMode: view.getUint8(12) as ControllerMode,
-      enableUsbSn: view.getUint8(13) === 1,
-      psShortcutEnabled: view.getUint8(14) === 1,
-      disableMic: view.getUint8(15) === 1,
-      disableSpeaker: view.getUint8(16) === 1,
-      enableWake: view.getUint8(17) === 1,
-      triggerReduce: view.getUint8(18),
-    },
-  };
-}
-
-function uniqueVersions(versions: number[]): number[] {
-  return [...new Set(versions)];
-}
-
-function toUint8Array(source: ArrayBuffer | DataView | Uint8Array): Uint8Array {
-  if (source instanceof Uint8Array) {
-    return source;
-  }
-
-  if (source instanceof DataView) {
-    return new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
-  }
-
-  return new Uint8Array(source);
-}
-
-function roundToStep(value: number, step: number): number {
-  return Math.round(value / step) * step;
 }
 
 function clampInteger(value: number, min: number, max: number): number {

@@ -1,5 +1,5 @@
 {
-  "name": "ds5dongle-config-web",
+  "name": "m61-dualsense-config-web",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,6 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "test": "node --test --experimental-strip-types src/protocol/m61Management.test.ts",
+    "check:m61": "node scripts/check-m61-product.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "pwa:test": "pnpm build && vite preview --host 127.0.0.1"
   },

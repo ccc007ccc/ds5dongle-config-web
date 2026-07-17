@@ -1,145 +1,71 @@
-# M61 Web configurator refactor specification
+# M61 Web configurator specification
 
 [简体中文](M61_WEB_REFACTOR_SPEC.zh-CN.md)
 
-## 1. Goal
+## Product boundary
 
-Turn the Pico2W-oriented configurator into the official M61 configurator
-without weakening the firmware's measured realtime release profile. The Web
-application and firmware must share a versioned, testable management protocol.
+This repository is the configuration and diagnostics application for the M61
+BL616/BL618 DualSense dongle. Every setting, label, asset, protocol type, and
+document must describe an M61 capability. Generic React, WebHID, and PWA
+technology remains implementation detail rather than a second product mode.
 
-## 2. Protocol
+## Management protocol
 
-The initial implementation keeps Feature Report IDs to minimize browser-side
-transport churn, but changes the schema identity:
-
-| Report | Direction | M61 meaning |
+| Report | Direction | Meaning |
 | --- | --- | --- |
-| `0xF6` | host to device | command envelope: apply, save, USB reconnect, later maintenance commands |
-| `0xF7` | device to host | current M61 configuration |
-| `0xF8` | device to host | firmware/build metadata |
-| `0xF9` | device to host | compact live telemetry |
+| `0xF6` | host to M61 | apply, save, USB reconnect, and maintenance commands |
+| `0xF7` | M61 to host | current versioned configuration |
+| `0xF8` | M61 to host | firmware and reproducible-build metadata |
+| `0xF9` | M61 to host | live telemetry and capability state |
 
-Requirements:
+All reports use 63-byte payloads. Configuration starts with `M61C`, schema
+version, payload length, and capability bits. Multi-byte values are
+little-endian. Unknown magic, versions, lengths, commands, or ranges are
+rejected before state changes. Reports `0xF6` through `0xF9` are handled by the
+M61 itself; every other DualSense Feature Report keeps the controller proxy.
 
-- Add an M61 protocol magic and schema version. Pico config v5 must fail with a
-  clear incompatible-device error.
-- WebHID payloads remain 63 bytes. All unused bytes are zero.
-- Multi-byte integers are little-endian. Boolean values must be `0` or `1`.
-- Every command is validated completely before any state changes.
-- `0xF6`–`0xF9` are handled locally and never enter the controller Feature
-  request queues. All other report IDs retain the existing proxy behavior.
-- `0xF9` keeps an RSSI/activity compatibility prefix: signed RSSI byte followed
-  by flags with bit 7 valid, bit 1 speaker active, and bit 0 microphone active.
-  Versioned M61 telemetry follows that prefix.
+## Configuration v1
 
-## 3. Configuration model v1
+The schema contains microphone enable, speaker enable, speaker route,
+automatic reconnect, M61 status LED enable, Q8 haptics gain, CPU governor,
+CPU profile, and safe manual frequency. The UI renders a control only when its
+capability bit is present. Frequencies above the validated 400 MHz limit are
+never writable through the normal Web application.
 
-The first schema contains only settings with an implemented and testable M61
-meaning:
+Applying changes is immediate and serialized. Saving is a separate operation
+that writes one versioned, CRC-protected record to Flash. Invalid records fall
+back to the measured release defaults. Flash access and USB cycling execute in
+task context, never in a HID callback or realtime audio path.
 
-| Field | Type/range | Apply behavior | Persistence |
-| --- | --- | --- | --- |
-| microphone enabled | bool | immediate; disabled mode serves USB silence | explicit save |
-| speaker enabled | bool | immediate; must not disable HD haptics | explicit save |
-| speaker route | auto/mono/stereo | immediate | explicit save |
-| automatic reconnect | bool | immediate for the connection state machine | explicit save |
-| status LED enabled | bool | immediate, automatic state when enabled | explicit save |
-| haptics gain | validated fixed-point range | immediate, saturating scale | explicit save |
-| CPU governor | manual/realtime | immediate | explicit save |
-| CPU profile/frequency | safe profile or 320–400 MHz | immediate | explicit save |
+## Telemetry v1
 
-Experimental clocks above 400 MHz are never writable or persistent through the
-normal Web UI. Descriptor-changing settings are not part of v1.
+Telemetry exposes stable product data: Bluetooth connection and RSSI validity,
+USB configured/suspended state, speaker and microphone activity, headset and
+effective channel route, current/requested CPU clock, bounded queue/drop/error
+counters, configuration state, and last management error. Encoding is static,
+allocation-free, nonblocking, and safe in the USB control path.
 
-The firmware stores a single record containing magic, schema version, payload
-length, payload, and CRC. Invalid or unknown records fall back to release
-defaults and report the reason through telemetry. Saving is explicit to limit
-Flash wear.
+## Delivery packages
 
-## 4. Telemetry model v1
+1. Protocol foundation: cross-language fixtures, local report interception,
+   firmware identity, configuration readback, DVFS apply, and hardware tests.
+2. Central configuration: CRC persistence and integration of microphone,
+   speaker, route, reconnect, LED, haptics gain, and DVFS.
+3. M61 interface: capability-driven Controller, Audio, Performance, Device,
+   and Diagnostics sections with complete English/Chinese coverage.
+4. Operations: pairing, disconnect, forget, diagnostics export, and guarded
+   ISP reboot.
+5. Hardware release: full-load audio, RAM/ITCM, reconnect, power-cycle, and
+   Chromium WebHID acceptance.
 
-Expose stable product data, not raw internal structs:
+## Performance and safety gates
 
-- Bluetooth state, saved controller, pairing/scanning state, and RSSI validity;
-- USB configured/suspended state;
-- speaker/microphone active, jack state, effective mono/stereo route;
-- current/requested CPU frequency and governor;
-- compact queue depth/high-water/drop and codec error counters;
-- config loaded/dirty/valid state and last management error.
-
-Counters may saturate. The report must be safe to create inside the HID control
-path without blocking or allocating memory.
-
-## 5. Firmware work packages
-
-### F0 — protocol foundation
-
-- Add `m61_web_config.[ch]` with defaults, validation, runtime apply, persistence,
-  report encoding, and unit-testable pure functions.
-- Intercept `0xF6`–`0xF9` in HID GET/SET callbacks.
-- Defer USB cycling and other disruptive actions to task context.
-- Add host tests for decode/encode, invalid lengths/versions/ranges, local-report
-  interception, proxy preservation, and save/load CRC failures.
-
-### F1 — integrate existing M61 settings
-
-- Route microphone, speaker route, automatic reconnect, status LED, and DVFS
-  through one configuration owner.
-- Add speaker enable and runtime haptics gain without changing queue sizes,
-  priorities, codec options, or memory placement.
-- Preserve current release defaults when no valid record exists.
-
-### F2 — telemetry and controller management
-
-- Implement telemetry v1 and connected RSSI sampling when supported.
-- Add asynchronous pair/scan/disconnect/forget commands with state polling.
-- Never block a USB control callback on Bluetooth discovery.
-
-## 6. Web work packages
-
-### W0 — protocol and tests
-
-- Split transport, schema, and presentation types.
-- Detect M61 magic/version before decoding configuration.
-- Add fixture tests for all reports and invalid responses.
-- Keep serialized/coalesced immediate apply and explicit save semantics.
-
-### W1 — M61 information architecture
-
-- Rename product/Pico wording and update README/PWA metadata.
-- Replace the Pico field list with tabs or sections for Controller, Audio,
-  Performance, Device, and Diagnostics.
-- Show effective versus configured values and reconnect requirements.
-- Preserve English/Chinese parity for every string.
-
-### W2 — M61 operations
-
-- Add pairing, disconnect, forget, telemetry health, diagnostics export, and a
-  guarded ISP reboot flow.
-- Hide unavailable capabilities based on protocol capability bits rather than
-  rendering controls that cannot work.
-
-## 7. Performance and safety gates
-
-Firmware acceptance requires:
-
-- existing offline tests and full Windows release build pass;
-- identical release compiler/Opus/WRAM settings and a provenance manifest;
-- no additional per-audio-frame allocation, logging, Flash access, or blocking;
-- RAM/ITCM gates remain within current limits;
-- hardware full-load audio has no new encode/decode errors or queue drops;
-- config apply/save/reconnect fuzz and power-loss behavior are tested.
-
-Web acceptance requires TypeScript build, protocol fixture tests, browser manual
-tests in Chromium, disconnect/reconnect recovery, and matching English/Chinese
-coverage.
-
-## 8. Delivery order
-
-1. F0 + W0: negotiated protocol and read-only identity/config round trip.
-2. F1 + W1: usable M61 configuration with apply/save/reconnect.
-3. F2 + W2: pairing, health telemetry, diagnostics, and maintenance.
-4. Hardware validation and public release.
-5. Evaluate deferred Pico features individually; none enter the UI before their
-   firmware semantics and performance evidence exist.
+- Keep the locked SDK, toolchain, Opus patch stack, 160 KiB WRAM, compiler
+  options, and build manifest.
+- Add no per-frame allocation, logging, Flash access, or blocking to audio.
+- Existing offline, protocol, scheduler, memory, and full firmware builds pass.
+- Full-load hardware audio shows no new codec errors or queue drops.
+- Web tests, TypeScript build, PWA build, disconnect recovery, and bilingual
+  key parity pass.
+- Source, UI, assets, metadata, README, and product documentation contain only
+  M61 product concepts; dependency lock files are excluded from this check.

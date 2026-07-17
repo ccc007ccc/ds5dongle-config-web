@@ -4,9 +4,10 @@ import {
   decodeConfigBody,
   encodeConfigBody,
 } from "./config";
+import { decodeM61Telemetry } from "./m61Management";
 
 export const SONY_VENDOR_ID = 0x054c;
-export const SUPPORTED_PRODUCT_IDS = [0x0ce6, 0x0df2] as const;
+export const SUPPORTED_PRODUCT_IDS = [0x0ce6] as const;
 export const NO_DEVICE_SELECTED_ERROR = "noDeviceSelected";
 export const WEBHID_UNAVAILABLE_ERROR = "webHidUnavailable";
 
@@ -36,7 +37,7 @@ export class Ds5BridgeHidClient {
   static isSupportedDevice(device: HIDDevice): boolean {
     return (
       device.vendorId === SONY_VENDOR_ID &&
-      SUPPORTED_PRODUCT_IDS.includes(device.productId as 0x0ce6 | 0x0df2) &&
+      SUPPORTED_PRODUCT_IDS.includes(device.productId as 0x0ce6) &&
       device.collections.some(isGamepadCollection)
     );
   }
@@ -124,7 +125,7 @@ export function getDeviceLabel(device: HIDDevice | null): string {
   }
 
   const productId = device.productId.toString(16).padStart(4, "0").toUpperCase();
-  return `${device.productName || "DS5 Bridge"} · 054C:${productId}`;
+  return `${device.productName || "M61 DualSense Dongle"} · 054C:${productId}`;
 }
 
 function getHid(): HID {
@@ -169,51 +170,14 @@ function decodePrintableString(bytes: Uint8Array): string {
 }
 
 function decodeSignalStrength(source: ArrayBuffer | DataView | Uint8Array): SignalStrengthReport {
-  const bytes = toUint8Array(source);
-  const offsets = bytes[0] === REPORT_GET_SIGNAL_STRENGTH ? [1, 0] : [0];
-  const candidates = offsets
-    .filter((offset) => offset < bytes.length)
-    .map((offset) => decodeSignalStrengthAtOffset(bytes, offset))
-    .filter((candidate) => candidate.rssi !== null);
-
-  const candidateWithAudioActivity = candidates.find((candidate) => candidate.audioActivity);
-  if (candidateWithAudioActivity) {
-    return candidateWithAudioActivity;
-  }
-
-  const preferredCandidate = candidates[0];
-  if (preferredCandidate) {
-    return preferredCandidate;
-  }
-
+  const telemetry = decodeM61Telemetry(source);
   return {
-    rssi: null,
-    audioActivity: null,
+    rssi: telemetry.rssi,
+    audioActivity: {
+      speakerActive: telemetry.speakerActive,
+      micActive: telemetry.microphoneActive,
+    },
   };
-}
-
-function decodeSignalStrengthAtOffset(bytes: Uint8Array, offset: number): SignalStrengthReport {
-  const rssi = toInt8(bytes[offset]);
-  const flags = bytes[offset + 1];
-
-  return {
-    rssi: rssi >= -128 && rssi <= 0 ? rssi : null,
-    audioActivity:
-      flags === undefined || !isAudioActivityFlags(flags)
-        ? null
-        : {
-            speakerActive: Boolean(flags & 0x02),
-            micActive: Boolean(flags & 0x01),
-          },
-  };
-}
-
-function isAudioActivityFlags(flags: number): boolean {
-  return (flags & 0x80) !== 0 && (flags & 0x7c) === 0;
-}
-
-function toInt8(byte: number): number {
-  return byte > 0x7f ? byte - 0x100 : byte;
 }
 
 function trimTrailingZeros(bytes: Uint8Array): Uint8Array {

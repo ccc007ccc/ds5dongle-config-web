@@ -1,219 +1,149 @@
-import { Gauge, Gamepad2, SlidersHorizontal, Volume2, Zap } from "lucide-react";
+import type { ChangeEvent, ReactNode } from "react";
+import { Cpu, Radio, Volume2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
-import { fieldIssue } from "../protocol/config";
-import { ControllerModeControl } from "./config/ControllerModeControl";
-import { FloatControl } from "./config/FloatControl";
+import { fieldIssue, hasCapability } from "../protocol/config";
+import { M61Capability } from "../protocol/m61Management";
 import { IntegerControl } from "./config/IntegerControl";
-import { PollingRateControl } from "./config/PollingRateControl";
 import { ToggleControl } from "./config/ToggleControl";
 
-interface ConfigPanelProps {
-  bridge: UseDs5BridgeResult;
-}
-
-export function ConfigPanel({ bridge }: ConfigPanelProps) {
+export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
   const { t } = useTranslation();
-  const controlsDisabled = !bridge.isConnected;
+  const config = bridge.draft;
+  const disconnected = !bridge.isConnected;
+  const supports = (capability: number) => hasCapability(config, capability);
 
   return (
     <Card className="panel config-panel">
       <CardHeader className="p-0">
         <CardTitle className="panel-title">
-          <SlidersHorizontal size={18} />
+          <Radio size={18} />
           <h2>{t("config.title")}</h2>
         </CardTitle>
       </CardHeader>
-
       <CardContent className="config-sections p-0">
         <div className="config-column">
           <section className="config-section config-section-featured">
-            <div className="config-section-heading">
-              <span className="config-section-icon">
-                <Volume2 size={17} />
-              </span>
-              <div>
-                <h3>{t("config.sections.feedback")}</h3>
-                <p>{t("config.sections.feedbackDescription")}</p>
-              </div>
-            </div>
-            <div className="control-stack">
-              <FloatControl
-                label={t("config.hapticsGain")}
-                value={bridge.draft.hapticsGain}
-                min={1}
-                max={2}
-                step={0.05}
-                helpContent={t("config.help.hapticsGain")}
-                issue={fieldIssue(bridge.issues, "hapticsGain")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("hapticsGain", value)}
-              />
-              {/*
-              <IntegerControl
-                label={t("config.speakerVolume")}
-                value={bridge.draft.speakerVolume}
-                min={0}
-                max={127}
-                helpContent={t("config.help.speakerVolume")}
-                issue={fieldIssue(bridge.issues, "speakerVolume")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("speakerVolume", value)}
-              />
-              <IntegerControl
-                label={t("config.headsetVolume")}
-                value={bridge.draft.headsetVolume}
-                min={0}
-                max={127}
-                helpContent={t("config.help.headsetVolume")}
-                issue={fieldIssue(bridge.issues, "headsetVolume")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("headsetVolume", value)}
-              />
-              */}
-              <IntegerControl
-                label={t("config.speakerGain")}
-                value={bridge.draft.speakerGain}
-                min={0}
-                max={7}
-                helpContent={t("config.help.speakerGain")}
-                issue={fieldIssue(bridge.issues, "speakerGain")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("speakerGain", value)}
-              />
-              <IntegerControl
-                label={t("config.triggerReduce")}
-                value={bridge.draft.triggerReduce}
-                min={0}
-                max={10}
-                helpContent={t("config.help.triggerReduce")}
-                issue={fieldIssue(bridge.issues, "triggerReduce")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("triggerReduce", value)}
-              />
-              <IntegerControl
-                label={t("config.audioBufferLength")}
-                value={bridge.draft.audioBufferLength}
-                min={16}
-                max={127}
-                helpContent={t("config.help.audioBufferLength")}
-                issue={fieldIssue(bridge.issues, "audioBufferLength")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("audioBufferLength", value)}
-              />
-            </div>
-          </section>
-
-          <section className="config-section">
-            <div className="config-section-heading">
-              <span className="config-section-icon">
-                <Gauge size={17} />
-              </span>
-              <div>
-                <h3>{t("config.sections.performance")}</h3>
-                <p>{t("config.sections.performanceDescription")}</p>
-              </div>
-            </div>
-            <div className="control-stack compact-stack">
-              <PollingRateControl
-                value={bridge.draft.pollingRateMode}
-                helpContent={t("config.help.pollingRateMode")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("pollingRateMode", value)}
-              />
-            </div>
+            <SectionHeading icon={<Volume2 size={18} />} title={t("config.sections.audio")} description={t("config.sections.audioDescription")} />
+            <ToggleControl
+              label={t("config.microphoneEnabled")}
+              value={config.microphoneEnabled}
+              helpContent={t("config.help.microphoneEnabled")}
+              disabled={disconnected || !supports(M61Capability.Microphone)}
+              onChange={(value) => bridge.setDraftField("microphoneEnabled", value)}
+            />
+            <ToggleControl
+              label={t("config.speakerEnabled")}
+              value={config.speakerEnabled}
+              helpContent={t("config.help.speakerEnabled")}
+              disabled={disconnected || !supports(M61Capability.SpeakerGate)}
+              onChange={(value) => bridge.setDraftField("speakerEnabled", value)}
+            />
+            <SelectControl
+              label={t("config.speakerRoute")}
+              value={config.speakerRoute}
+              disabled={disconnected || !supports(M61Capability.SpeakerRoute)}
+              options={[
+                [0, t("config.speakerRoutes.auto")],
+                [1, t("config.speakerRoutes.mono")],
+                [2, t("config.speakerRoutes.stereo")],
+              ]}
+              onChange={(value) => bridge.setDraftField("speakerRoute", value as 0 | 1 | 2)}
+            />
+            <IntegerControl
+              label={t("config.hapticsGainQ8")}
+              value={config.hapticsGainQ8}
+              min={256}
+              max={512}
+              helpContent={t("config.help.hapticsGainQ8")}
+              issue={fieldIssue(bridge.issues, "hapticsGainQ8")}
+              disabled={disconnected || !supports(M61Capability.HapticsGain)}
+              onChange={(value) => bridge.setDraftField("hapticsGainQ8", value)}
+            />
           </section>
         </div>
 
         <div className="config-column">
           <section className="config-section">
-            <div className="config-section-heading">
-              <span className="config-section-icon">
-                <Zap size={17} />
-              </span>
-              <div>
-                <h3>{t("config.sections.power")}</h3>
-                <p>{t("config.sections.powerDescription")}</p>
-              </div>
-            </div>
-            <div className="control-stack compact-stack">
-              <IntegerControl
-                label={`${t("config.inactiveTime")} (${t("config.inactiveTimeUnit")})`}
-                value={bridge.draft.inactiveTime}
-                min={0}
-                max={60}
-                helpContent={t("config.help.inactiveTime")}
-                issue={fieldIssue(bridge.issues, "inactiveTime")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("inactiveTime", value)}
-              />
-              <ToggleControl
-                label={t("config.disablePicoLed")}
-                value={bridge.draft.disablePicoLed}
-                helpContent={t("config.help.disablePicoLed")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("disablePicoLed", value)}
-              />
-              <ToggleControl
-                label={t("config.disableMic")}
-                value={bridge.draft.disableMic}
-                helpContent={t("config.help.disableMic")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("disableMic", value)}
-              />
-              <ToggleControl
-                label={t("config.disableSpeaker")}
-                value={bridge.draft.disableSpeaker}
-                helpContent={t("config.help.disableSpeaker")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("disableSpeaker", value)}
-              />
-              <ToggleControl
-                label={t("config.enableWake")}
-                value={bridge.draft.enableWake}
-                helpContent={t("config.help.enableWake")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("enableWake", value)}
-              />
-            </div>
+            <SectionHeading icon={<Cpu size={18} />} title={t("config.sections.performance")} description={t("config.sections.performanceDescription")} />
+            <SelectControl
+              label={t("config.cpuGovernor")}
+              value={config.cpuGovernor}
+              disabled={disconnected || !supports(M61Capability.Dvfs)}
+              options={[[0, t("config.cpuGovernors.manual")], [1, t("config.cpuGovernors.realtime")]]}
+              onChange={(value) => bridge.setDraftField("cpuGovernor", value as 0 | 1)}
+            />
+            <SelectControl
+              label={t("config.cpuProfile")}
+              value={config.cpuProfile}
+              disabled={disconnected || !supports(M61Capability.Dvfs)}
+              options={[
+                [0, t("config.cpuProfiles.eco")],
+                [1, t("config.cpuProfiles.balanced")],
+                [2, t("config.cpuProfiles.performance")],
+                [3, t("config.cpuProfiles.custom")],
+              ]}
+              onChange={(value) => bridge.setDraftField("cpuProfile", value as 0 | 1 | 2 | 3)}
+            />
+            <IntegerControl
+              label={t("config.manualCpuMhz")}
+              value={config.manualCpuMhz}
+              min={320}
+              max={400}
+              helpContent={t("config.help.manualCpuMhz")}
+              issue={fieldIssue(bridge.issues, "manualCpuMhz")}
+              disabled={disconnected || !supports(M61Capability.Dvfs) || config.cpuProfile !== 3}
+              onChange={(value) => bridge.setDraftField("manualCpuMhz", value)}
+            />
           </section>
 
           <section className="config-section">
-            <div className="config-section-heading">
-              <span className="config-section-icon">
-                <Gamepad2 size={17} />
-              </span>
-              <div>
-                <h3>{t("config.sections.compatibility")}</h3>
-                <p>{t("config.sections.compatibilityDescription")}</p>
-              </div>
-            </div>
-            <div className="control-stack compact-stack">
-              <ControllerModeControl
-                value={bridge.draft.controllerMode}
-                helpContent={t("config.help.controllerMode")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("controllerMode", value)}
-              />
-              <ToggleControl
-                label={t("config.enableUsbSn")}
-                value={bridge.draft.enableUsbSn}
-                helpContent={t("config.help.enableUsbSn")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("enableUsbSn", value)}
-              />
-              <ToggleControl
-                label={t("config.psShortcutEnabled")}
-                value={bridge.draft.psShortcutEnabled}
-                helpContent={t("config.help.psShortcutEnabled")}
-                disabled={controlsDisabled}
-                onChange={(value) => bridge.setDraftField("psShortcutEnabled", value)}
-              />
-            </div>
+            <SectionHeading icon={<Radio size={18} />} title={t("config.sections.device")} description={t("config.sections.deviceDescription")} />
+            <ToggleControl
+              label={t("config.autoReconnectEnabled")}
+              value={config.autoReconnectEnabled}
+              helpContent={t("config.help.autoReconnectEnabled")}
+              disabled={disconnected || !supports(M61Capability.AutoReconnect)}
+              onChange={(value) => bridge.setDraftField("autoReconnectEnabled", value)}
+            />
+            <ToggleControl
+              label={t("config.statusLedEnabled")}
+              value={config.statusLedEnabled}
+              helpContent={t("config.help.statusLedEnabled")}
+              disabled={disconnected || !supports(M61Capability.StatusLed)}
+              onChange={(value) => bridge.setDraftField("statusLedEnabled", value)}
+            />
           </section>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function SectionHeading({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
+  return (
+    <div className="config-section-heading">
+      <span className="config-section-icon">{icon}</span>
+      <div><h3>{title}</h3><p>{description}</p></div>
+    </div>
+  );
+}
+
+function SelectControl({ label, value, options, disabled, onChange }: {
+  label: string;
+  value: number;
+  options: Array<[number, string]>;
+  disabled: boolean;
+  onChange: (value: number) => void;
+}) {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => onChange(Number(event.currentTarget.value));
+  return (
+    <label className="control-row" aria-disabled={disabled}>
+      <span className="control-label"><strong>{label}</strong></span>
+      <select value={value} disabled={disabled} onChange={handleChange}>
+        {options.map(([optionValue, text]) => <option key={optionValue} value={optionValue}>{text}</option>)}
+      </select>
+    </label>
   );
 }

@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { en } from "../i18n/locales/en.ts";
+import { zh } from "../i18n/locales/zh.ts";
 import {
   M61Capability,
   M61Command,
@@ -39,10 +41,10 @@ test("M61 config round trips with and without report ID", () => {
   assert.deepEqual(decodeM61Config(withId), config);
 });
 
-test("Pico config v5 is rejected by magic", () => {
-  const pico = new Uint8Array(19);
-  pico[0] = 5;
-  assert.throws(() => decodeM61Config(pico), (error: unknown) => {
+test("an unrelated legacy config is rejected by magic", () => {
+  const legacy = new Uint8Array(19);
+  legacy[0] = 5;
+  assert.throws(() => decodeM61Config(legacy), (error: unknown) => {
     return error instanceof M61ProtocolError && error.code === "invalidMagic";
   });
 });
@@ -70,3 +72,14 @@ test("telemetry preserves the RSSI and activity compatibility prefix", () => {
     requestedCpuMhz: 384,
   });
 });
+
+test("English and Chinese product strings have identical keys", () => {
+  assert.deepEqual(objectKeys(en), objectKeys(zh));
+});
+
+function objectKeys(value: object, prefix = ""): string[] {
+  return Object.entries(value).flatMap(([key, child]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    return child && typeof child === "object" ? objectKeys(child, path) : [path];
+  }).sort();
+}

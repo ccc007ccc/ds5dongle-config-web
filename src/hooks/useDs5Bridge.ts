@@ -20,8 +20,6 @@ import type { AudioActivityState } from "../protocol/ds5BridgeHid";
 
 type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
-type UsbEffectiveConfig = Pick<ConfigBody, "pollingRateMode" | "controllerMode" | "enableUsbSn">;
-
 const SIGNAL_STRENGTH_REFRESH_INTERVAL_MS = 5_000;
 
 export interface UseDs5BridgeResult {
@@ -71,7 +69,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const clientRef = useRef<Ds5BridgeHidClient | null>(null);
   const configRef = useRef<ConfigBody | null>(null);
   const draftRef = useRef<ConfigBody>(DEFAULT_CONFIG);
-  const usbEffectiveConfigRef = useRef<UsbEffectiveConfig | null>(null);
   const applyingRef = useRef(false);
   const applyQueuedRef = useRef(false);
 
@@ -119,7 +116,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       configRef.current = nextConfig;
       draftRef.current = nextConfig;
       if (syncUsbEffectiveConfig) {
-        usbEffectiveConfigRef.current = pickUsbEffectiveConfig(nextConfig);
         setNeedsUsbReconnect(false);
       }
       setConfig(nextConfig);
@@ -243,7 +239,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         await nextClient.applyConfig(nextDraft);
         configRef.current = nextDraft;
         setConfig(nextDraft);
-        setNeedsUsbReconnect(usbEffectiveConfigChanged(usbEffectiveConfigRef.current, nextDraft));
+        setNeedsUsbReconnect(false);
         setSaveState("applied");
         setError(null);
 
@@ -292,7 +288,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     setOperation("reconnecting");
     try {
       await client.reconnectUsb();
-      usbEffectiveConfigRef.current = pickUsbEffectiveConfig(configRef.current ?? draftRef.current);
       setNeedsUsbReconnect(false);
       setError(null);
     } catch (cause) {
@@ -370,7 +365,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         clientRef.current = null;
         configRef.current = null;
         draftRef.current = DEFAULT_CONFIG;
-        usbEffectiveConfigRef.current = null;
         setClient(null);
         setFirmwareVersion(null);
         setSignalStrengthRssi(null);
@@ -445,40 +439,20 @@ function operationLabel(operation: Exclude<Operation, null>, t: (key: string) =>
   }
 }
 
-function pickUsbEffectiveConfig(config: ConfigBody): UsbEffectiveConfig {
-  return {
-    pollingRateMode: config.pollingRateMode,
-    controllerMode: config.controllerMode,
-    enableUsbSn: config.enableUsbSn,
-  };
-}
-
-function usbEffectiveConfigChanged(current: UsbEffectiveConfig | null, next: ConfigBody): boolean {
-  if (!current) {
-    return false;
-  }
-
-  return (
-    current.pollingRateMode !== next.pollingRateMode ||
-    current.controllerMode !== next.controllerMode ||
-    current.enableUsbSn !== next.enableUsbSn
-  );
-}
-
 function errorMessage(cause: unknown, t: (key: string, values?: Record<string, unknown>) => string): string {
   if (cause instanceof ConfigDecodeError) {
     if (cause.code === "invalidConfig") {
-      const fields = Array.isArray(cause.values.issues) ? cause.values.issues : [];
+      const fields = Array.isArray(cause.details.issues) ? cause.details.issues : [];
       const issues = fields.map((field) => t(`validation.${String(field)}`)).join("; ");
 
       return t("errors.invalidConfig", { issues });
     }
 
     if (cause.code === "versionMismatch") {
-      return t("errors.configVersionMismatch", cause.values);
+      return t("errors.configVersionMismatch", cause.details);
     }
 
-    return t("errors.invalidBytes", cause.values);
+    return t("errors.invalidBytes", cause.details);
   }
 
   if (cause instanceof Error) {
