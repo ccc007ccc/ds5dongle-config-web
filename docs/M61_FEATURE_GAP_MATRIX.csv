@@ -4,7 +4,7 @@ config_read,protocol,Read report 0xF7,schema v3 implemented and hardware validat
 config_apply,protocol,Apply command 0xF6/0x01,implemented and hardware validated,implemented,all advertised capabilities apply atomically,P0,write and readback match on hardware
 config_save,protocol,Save command 0xF6/0x02,CRC record implemented and reset validated,implemented,one CRC-protected M61 record,P0,power-cycle restores every advertised field
 stick_deadzone,input,Independent radial stick deadzones,schema v3 implemented,implemented,left and right 0-30 percent scaled radial correction,P1,center drift is removed while direction and full travel remain intact after reset
-usb_reconnect,protocol,USB reconnect command,implemented,implemented,deferred safe USB cycle,P0,Web reconnect recovers the same authorized device
+usb_reconnect,protocol,USB reconnect command,implemented,automatic authorized-device recovery implemented,deferred safe USB cycle,P0,Web reconnect recovers the same authorized device or reports a bounded timeout
 firmware_version,telemetry,Firmware report 0xF8,implemented,implemented,semantic version revision and build profile,P0,UI renders structured M61 build metadata
 live_telemetry,telemetry,Telemetry report 0xF9,v2 implemented and protocol validated,full v2 status and queue display implemented,stable Bluetooth USB audio management and CPU snapshot,P1,fixture and hardware reports agree
 rssi,telemetry,Connected-controller RSSI,disabled after BR/EDR connection regression,unavailable state implemented,non-disruptive controller RSSI source,P1,signed dBm changes plausibly with distance without affecting HIDP input

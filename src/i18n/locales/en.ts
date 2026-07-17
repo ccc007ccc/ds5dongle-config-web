@@ -94,5 +94,6 @@ export const en = {
     invalidConfig: "M61 returned invalid configuration: {{issues}}", invalidBytes: "The selected HID device did not return an M61 management report.",
     configVersionMismatch: "M61 config version mismatch: Web={{expected}}, firmware={{actual}}. Update firmware or the configurator.",
     noDeviceSelected: "No M61 DualSense dongle was selected", unexpectedWebHid: "Unexpected WebHID error", disconnected: "M61 disconnected",
+    usbReconnectTimedOut: "M61 USB reconnect timed out. Use Open to reconnect the authorized device.",
   },
 } as const;

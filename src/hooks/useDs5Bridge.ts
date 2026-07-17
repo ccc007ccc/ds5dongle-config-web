@@ -22,6 +22,8 @@ import type { M61Telemetry } from "../protocol/m61Management";
 type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | "poweringOff" | "pairing" | "disconnectingController" | "forgettingController" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
 const SIGNAL_STRENGTH_REFRESH_INTERVAL_MS = 5_000;
+const USB_RECONNECT_TIMEOUT_MS = 12_000;
+const USB_RECONNECT_TIMEOUT_ERROR = "usbReconnectTimedOut";
 
 export interface UseDs5BridgeResult {
   supported: boolean;
@@ -78,6 +80,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const draftRef = useRef<ConfigBody>(DEFAULT_CONFIG);
   const applyingRef = useRef(false);
   const applyQueuedRef = useRef(false);
+  const usbReconnectPendingRef = useRef(false);
+  const usbReconnectTimeoutRef = useRef<number | null>(null);
 
   const issues = useMemo(() => validateConfig(draft), [draft]);
   const isConnected = Boolean(client?.device.opened);
@@ -297,13 +301,22 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
 
     setOperation("reconnecting");
+    usbReconnectPendingRef.current = true;
     try {
       await client.reconnectUsb();
-      setNeedsUsbReconnect(false);
       setError(null);
+      if (usbReconnectPendingRef.current) {
+        usbReconnectTimeoutRef.current = window.setTimeout(() => {
+          if (!usbReconnectPendingRef.current) return;
+          usbReconnectPendingRef.current = false;
+          usbReconnectTimeoutRef.current = null;
+          setOperation(null);
+          setError(t(`errors.${USB_RECONNECT_TIMEOUT_ERROR}`));
+        }, USB_RECONNECT_TIMEOUT_MS);
+      }
     } catch (cause) {
+      usbReconnectPendingRef.current = false;
       setError(errorMessage(cause, t));
-    } finally {
       setOperation(null);
     }
   }, [client, t]);
@@ -428,13 +441,33 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         setDraft(DEFAULT_CONFIG);
         setNeedsUsbReconnect(false);
         setSaveState("idle");
-        setError(t("errors.disconnected"));
+        if (usbReconnectPendingRef.current) {
+          setOperation("reconnecting");
+          setError(null);
+        } else {
+          setError(t("errors.disconnected"));
+        }
       }
       void refreshAuthorizedDevices();
     };
 
-    const handleConnect = () => {
+    const handleConnect = (event: HIDConnectionEvent) => {
       void refreshAuthorizedDevices();
+      if (!usbReconnectPendingRef.current || !Ds5BridgeHidClient.isSupportedDevice(event.device)) {
+        return;
+      }
+
+      usbReconnectPendingRef.current = false;
+      if (usbReconnectTimeoutRef.current !== null) {
+        window.clearTimeout(usbReconnectTimeoutRef.current);
+        usbReconnectTimeoutRef.current = null;
+      }
+      void attachClient(new Ds5BridgeHidClient(event.device))
+        .then(() => setNeedsUsbReconnect(false))
+        .catch((cause) => {
+          setOperation(null);
+          setError(errorMessage(cause, t));
+        });
     };
 
     navigator.hid.addEventListener("disconnect", handleDisconnect);
@@ -444,7 +477,13 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       navigator.hid?.removeEventListener("disconnect", handleDisconnect);
       navigator.hid?.removeEventListener("connect", handleConnect);
     };
-  }, [client, refreshAuthorizedDevices, t]);
+  }, [attachClient, client, refreshAuthorizedDevices, t]);
+
+  useEffect(() => () => {
+    if (usbReconnectTimeoutRef.current !== null) {
+      window.clearTimeout(usbReconnectTimeoutRef.current);
+    }
+  }, []);
 
   return {
     supported,

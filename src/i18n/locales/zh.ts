@@ -87,5 +87,6 @@ export const zh = {
     invalidConfig: "M61 返回了无效配置：{{issues}}", invalidBytes: "选择的 HID 设备没有返回 M61 管理报告。",
     configVersionMismatch: "M61 配置版本不匹配：网页={{expected}}，固件={{actual}}。请更新固件或配置器。",
     noDeviceSelected: "没有选择 M61 DualSense 接收器", unexpectedWebHid: "未知 WebHID 错误", disconnected: "M61 已断开",
+    usbReconnectTimedOut: "M61 USB 重连超时，请使用已授权设备的“打开”按钮重新连接。",
   },
 } as const;
