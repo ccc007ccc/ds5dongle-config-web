@@ -8,7 +8,7 @@ import {
   type M61Config,
 } from "./m61Management";
 
-export const CONFIG_BODY_VERSION = 2;
+export const CONFIG_BODY_VERSION = 3;
 export const CONFIG_BODY_SIZE = M61_CONFIG_BODY_SIZE;
 export const FEATURE_REPORT_PAYLOAD_SIZE = M61_FEATURE_PAYLOAD_SIZE;
 export type ConfigBody = M61Config;
@@ -30,7 +30,8 @@ export const DEFAULT_CONFIG: ConfigBody = {
     M61Capability.Telemetry |
     M61Capability.IdlePowerOff |
     M61Capability.ControllerPowerOff |
-    M61Capability.SuspendPowerOff,
+    M61Capability.SuspendPowerOff |
+    M61Capability.StickDeadzone,
   microphoneEnabled: false,
   speakerEnabled: true,
   autoReconnectEnabled: true,
@@ -42,6 +43,8 @@ export const DEFAULT_CONFIG: ConfigBody = {
   hapticsGainQ8: 0x0100,
   idleTimeoutMinutes: 0,
   powerOffOnUsbSuspend: false,
+  leftStickDeadzonePercent: 0,
+  rightStickDeadzonePercent: 0,
 };
 
 export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): ConfigBody {
@@ -79,6 +82,12 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.idleTimeoutMinutes) || config.idleTimeoutMinutes < 0 || config.idleTimeoutMinutes > 60) {
     issues.push({ field: "idleTimeoutMinutes" });
   }
+  if (!Number.isInteger(config.leftStickDeadzonePercent) || config.leftStickDeadzonePercent < 0 || config.leftStickDeadzonePercent > 30) {
+    issues.push({ field: "leftStickDeadzonePercent" });
+  }
+  if (!Number.isInteger(config.rightStickDeadzonePercent) || config.rightStickDeadzonePercent < 0 || config.rightStickDeadzonePercent > 30) {
+    issues.push({ field: "rightStickDeadzonePercent" });
+  }
   return issues;
 }
 
@@ -96,6 +105,8 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     hapticsGainQ8: clampInteger(config.hapticsGainQ8, 0x0100, 0x0200),
     idleTimeoutMinutes: clampInteger(config.idleTimeoutMinutes, 0, 60),
     powerOffOnUsbSuspend: Boolean(config.powerOffOnUsbSuspend),
+    leftStickDeadzonePercent: clampInteger(config.leftStickDeadzonePercent, 0, 30),
+    rightStickDeadzonePercent: clampInteger(config.rightStickDeadzonePercent, 0, 30),
   };
 }
 
@@ -114,6 +125,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.hapticsGainQ8 === right.hapticsGainQ8
     && left.idleTimeoutMinutes === right.idleTimeoutMinutes
     && left.powerOffOnUsbSuspend === right.powerOffOnUsbSuspend
+    && left.leftStickDeadzonePercent === right.leftStickDeadzonePercent
+    && left.rightStickDeadzonePercent === right.rightStickDeadzonePercent
   );
 }
 

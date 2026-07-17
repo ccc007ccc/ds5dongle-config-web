@@ -3,8 +3,8 @@ export const M61_COMMAND_REPORT_ID = 0xf6;
 export const M61_FIRMWARE_REPORT_ID = 0xf8;
 export const M61_TELEMETRY_REPORT_ID = 0xf9;
 export const M61_FEATURE_PAYLOAD_SIZE = 63;
-export const M61_CONFIG_SCHEMA_VERSION = 2;
-export const M61_CONFIG_BODY_SIZE = 18;
+export const M61_CONFIG_SCHEMA_VERSION = 3;
+export const M61_CONFIG_BODY_SIZE = 20;
 
 const MAGIC = new Uint8Array([0x4d, 0x36, 0x31, 0x43]); // M61C
 
@@ -31,6 +31,7 @@ export const M61Capability = {
   IdlePowerOff: 1 << 8,
   ControllerPowerOff: 1 << 9,
   SuspendPowerOff: 1 << 10,
+  StickDeadzone: 1 << 11,
 } as const;
 
 export type M61SpeakerRoute = 0 | 1 | 2;
@@ -50,6 +51,8 @@ export interface M61Config {
   hapticsGainQ8: number;
   idleTimeoutMinutes: number;
   powerOffOnUsbSuspend: boolean;
+  leftStickDeadzonePercent: number;
+  rightStickDeadzonePercent: number;
 }
 
 export interface M61Telemetry {
@@ -114,6 +117,8 @@ export function encodeM61Config(config: M61Config): Uint8Array<ArrayBuffer> {
   view.setUint16(14, config.hapticsGainQ8, true);
   view.setUint8(16, config.idleTimeoutMinutes);
   view.setUint8(17, config.powerOffOnUsbSuspend ? 0x01 : 0x00);
+  view.setUint8(18, config.leftStickDeadzonePercent);
+  view.setUint8(19, config.rightStickDeadzonePercent);
   return bytes;
 }
 
@@ -157,6 +162,8 @@ export function decodeM61Config(source: ArrayBuffer | DataView | Uint8Array): M6
     hapticsGainQ8: view.getUint16(14, true),
     idleTimeoutMinutes: view.getUint8(16),
     powerOffOnUsbSuspend: Boolean(view.getUint8(17) & 0x01),
+    leftStickDeadzonePercent: view.getUint8(18),
+    rightStickDeadzonePercent: view.getUint8(19),
   };
   validateM61Config(config);
   return config;
@@ -246,7 +253,13 @@ export function validateM61Config(config: M61Config): void {
     config.hapticsGainQ8 <= 0x0200 &&
     Number.isInteger(config.idleTimeoutMinutes) &&
     config.idleTimeoutMinutes >= 0 &&
-    config.idleTimeoutMinutes <= 60;
+    config.idleTimeoutMinutes <= 60 &&
+    Number.isInteger(config.leftStickDeadzonePercent) &&
+    config.leftStickDeadzonePercent >= 0 &&
+    config.leftStickDeadzonePercent <= 30 &&
+    Number.isInteger(config.rightStickDeadzonePercent) &&
+    config.rightStickDeadzonePercent >= 0 &&
+    config.rightStickDeadzonePercent <= 30;
   if (!valid) {
     throw new M61ProtocolError("invalidConfig");
   }

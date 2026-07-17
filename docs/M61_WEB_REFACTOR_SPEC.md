@@ -24,13 +24,14 @@ little-endian. Unknown magic, versions, lengths, commands, or ranges are
 rejected before state changes. Reports `0xF6` through `0xF9` are handled by the
 M61 itself; every other DualSense Feature Report keeps the controller proxy.
 
-## Configuration v2
+## Configuration v3
 
 The schema contains microphone enable, speaker enable, speaker route,
 automatic reconnect, M61 status LED enable, Q8 haptics gain, CPU governor,
 CPU profile, safe manual frequency, 0–60 minute controller inactivity timeout,
-and host-suspend controller power policy. The UI renders a control only when its
-capability bit is present. Frequencies above the validated 400 MHz limit are
+host-suspend controller power policy, and independent left/right 0–30% scaled
+radial stick deadzones. The UI enables a control only when its capability bit
+is present. Frequencies above the validated 400 MHz limit are
 never writable through the normal Web application.
 
 Release defaults keep the microphone disabled, the CPU fixed at 320 MHz,
@@ -65,13 +66,17 @@ allocation-free, nonblocking, and safe in the USB control path.
 4. Operations: pairing, disconnect, forget, diagnostics export, and guarded
    ISP reboot.
 5. Power policy: configurable controller inactivity timeout, explicit
-   controller power-off, host-suspend policy, and reconnect behavior. Schema v2
-   accepts and migrates the existing schema-v1 Flash record. Input
+   controller power-off, host-suspend policy, and reconnect behavior. Schema v3
+   accepts and migrates existing schema-v1/v2 Flash records. Input
    activity is derived from decoded M61 DualSense reports rather than copied
-   platform-specific heuristics. Timeout `0` disables automatic power-off;
+   platform-specific heuristics. A fixed inner 25% stick threshold prevents
+   center drift from keeping the controller awake without changing game input.
+   Timeout `0` disables automatic power-off;
    nonzero values are bounded to 1–60 minutes. Power-off uses the DualSense
    Bluetooth Feature Report `0x08`, then observes the normal link teardown.
-6. Hardware release: full-load audio, RAM/ITCM, reconnect, power-cycle, and
+6. Input correction: independent scaled radial deadzones preserve direction
+   and full stick travel; `0%` is a bit-exact bypass.
+7. Hardware release: full-load audio, RAM/ITCM, reconnect, power-cycle, and
    Chromium WebHID acceptance.
 
 ## Performance and safety gates

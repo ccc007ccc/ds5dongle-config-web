@@ -1,5 +1,5 @@
 import type { ChangeEvent, ReactNode } from "react";
-import { Cpu, Radio, Volume2 } from "lucide-react";
+import { Cpu, Gamepad2, Radio, Volume2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
@@ -61,6 +61,29 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               issue={fieldIssue(bridge.issues, "hapticsGainQ8")}
               disabled={disconnected || !supports(M61Capability.HapticsGain)}
               onChange={(value) => bridge.setDraftField("hapticsGainQ8", value)}
+            />
+          </section>
+          <section className="config-section">
+            <SectionHeading icon={<Gamepad2 size={18} />} title={t("config.sections.input")} description={t("config.sections.inputDescription")} />
+            <IntegerControl
+              label={t("config.leftStickDeadzonePercent")}
+              value={config.leftStickDeadzonePercent}
+              min={0}
+              max={30}
+              helpContent={t("config.help.stickDeadzone")}
+              issue={fieldIssue(bridge.issues, "leftStickDeadzonePercent")}
+              disabled={disconnected || !supports(M61Capability.StickDeadzone)}
+              onChange={(value) => bridge.setDraftField("leftStickDeadzonePercent", value)}
+            />
+            <IntegerControl
+              label={t("config.rightStickDeadzonePercent")}
+              value={config.rightStickDeadzonePercent}
+              min={0}
+              max={30}
+              helpContent={t("config.help.stickDeadzone")}
+              issue={fieldIssue(bridge.issues, "rightStickDeadzonePercent")}
+              disabled={disconnected || !supports(M61Capability.StickDeadzone)}
+              onChange={(value) => bridge.setDraftField("rightStickDeadzonePercent", value)}
             />
           </section>
         </div>

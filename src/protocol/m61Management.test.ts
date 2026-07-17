@@ -5,6 +5,7 @@ import { zh } from "../i18n/locales/zh.ts";
 import {
   M61Capability,
   M61Command,
+  M61_CONFIG_BODY_SIZE,
   M61_CONFIG_REPORT_ID,
   M61_FEATURE_PAYLOAD_SIZE,
   M61ProtocolError,
@@ -32,6 +33,8 @@ const config: M61Config = {
   hapticsGainQ8: 0x0180,
   idleTimeoutMinutes: 30,
   powerOffOnUsbSuspend: true,
+  leftStickDeadzonePercent: 8,
+  rightStickDeadzonePercent: 12,
 };
 
 test("M61 config round trips with and without report ID", () => {
@@ -44,7 +47,7 @@ test("M61 config round trips with and without report ID", () => {
 });
 
 test("an unrelated legacy config is rejected by magic", () => {
-  const legacy = new Uint8Array(19);
+  const legacy = new Uint8Array(M61_CONFIG_BODY_SIZE);
   legacy[0] = 5;
   assert.throws(() => decodeM61Config(legacy), (error: unknown) => {
     return error instanceof M61ProtocolError && error.code === "invalidMagic";

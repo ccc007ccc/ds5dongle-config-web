@@ -108,17 +108,36 @@ export function ActionsPanel({ bridge, isBusy }: ActionsPanelProps) {
           {bridge.needsUsbReconnect && <div className="state-warning">{t("actions.reconnectRequired")}</div>}
           {bridge.telemetry && (
             <ul className="diagnostics-list">
+              <li>{t("diagnostics.bluetooth")}: {formatBoolean(bridge.telemetry.bluetoothConnected, t)}</li>
+              <li>{t("diagnostics.usb")}: {formatBoolean(bridge.telemetry.usbConfigured, t)}</li>
+              <li>{t("diagnostics.usbSuspend")}: {formatBoolean(bridge.telemetry.usbSuspended, t)}</li>
+              <li>{t("diagnostics.controllerSaved")}: {formatBoolean(bridge.telemetry.savedController, t)}</li>
+              <li>{t("diagnostics.configLoaded")}: {formatBoolean(bridge.telemetry.configLoaded, t)}</li>
+              <li>{t("diagnostics.pairing")}: {formatBoolean(bridge.telemetry.pairingActive, t)}</li>
+              <li>{t("diagnostics.discovery")}: {formatBoolean(bridge.telemetry.discoveryActive, t)}</li>
+              <li>{t("diagnostics.cpu")}: {formatCpu(bridge.telemetry.currentCpuMhz, bridge.telemetry.requestedCpuMhz, t)}</li>
               <li>{t("diagnostics.management")}: {bridge.telemetry.managementSequence} / {bridge.telemetry.lastManagementError}</li>
               <li>{t("diagnostics.usbDrops")}: {bridge.telemetry.usbInputDropped}</li>
               <li>{t("diagnostics.hostDrops")}: {bridge.telemetry.hostReportDropped}</li>
               <li>{t("diagnostics.audioDrops")}: {bridge.telemetry.audioIngressDropped + bridge.telemetry.hapticsQueueDropped}</li>
               <li>{t("diagnostics.codecErrors")}: {bridge.telemetry.speakerErrors + bridge.telemetry.microphoneErrors}</li>
+              <li>{t("diagnostics.featureQueues")}: {bridge.telemetry.featureGetQueueDepth} / {bridge.telemetry.featureSetQueueDepth}</li>
+              <li>{t("diagnostics.audioQueues")}: {bridge.telemetry.hapticsQueueDepth} / {bridge.telemetry.speakerQueueDepth}</li>
             </ul>
           )}
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function formatBoolean(value: boolean, t: (key: string) => string): string {
+  return value ? t("diagnostics.yes") : t("diagnostics.no");
+}
+
+function formatCpu(current: number | null, requested: number | null, t: (key: string) => string): string {
+  if (current === null && requested === null) return t("diagnostics.unavailable");
+  return `${current ?? "—"} / ${requested ?? "—"} MHz`;
 }
 
 function exportDiagnostics(bridge: UseDs5BridgeResult): void {

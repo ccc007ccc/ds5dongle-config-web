@@ -1,11 +1,12 @@
 id,area,capability,firmware_status,web_status,target,priority,acceptance
 transport,protocol,WebHID connection,implemented,implemented,M61 device negotiation,P0,M61C config report is required before controls unlock
-config_read,protocol,Read report 0xF7,schema v2 implemented and hardware validated,implemented,versioned M61 config,P0,hardware returns schema v2 and Web fixture matches
+config_read,protocol,Read report 0xF7,schema v3 implemented and hardware validated,implemented,versioned M61 config,P0,hardware returns schema v3 and Web fixture matches
 config_apply,protocol,Apply command 0xF6/0x01,implemented and hardware validated,implemented,all advertised capabilities apply atomically,P0,write and readback match on hardware
 config_save,protocol,Save command 0xF6/0x02,CRC record implemented and reset validated,implemented,one CRC-protected M61 record,P0,power-cycle restores every advertised field
+stick_deadzone,input,Independent radial stick deadzones,schema v3 implemented,implemented,left and right 0-30 percent scaled radial correction,P1,center drift is removed while direction and full travel remain intact after reset
 usb_reconnect,protocol,USB reconnect command,implemented,implemented,deferred safe USB cycle,P0,Web reconnect recovers the same authorized device
 firmware_version,telemetry,Firmware report 0xF8,implemented,implemented,semantic version revision and build profile,P0,UI renders structured M61 build metadata
-live_telemetry,telemetry,Telemetry report 0xF9,v2 implemented and protocol validated,v2 display implemented,stable Bluetooth USB audio management and CPU snapshot,P1,fixture and hardware reports agree
+live_telemetry,telemetry,Telemetry report 0xF9,v2 implemented and protocol validated,full v2 status and queue display implemented,stable Bluetooth USB audio management and CPU snapshot,P1,fixture and hardware reports agree
 rssi,telemetry,Connected-controller RSSI,disabled after BR/EDR connection regression,unavailable state implemented,non-disruptive controller RSSI source,P1,signed dBm changes plausibly with distance without affecting HIDP input
 health,telemetry,Queue and codec health,v2 counters implemented,display and JSON export implemented,compact bounded counters,P1,full-load warning thresholds validated
 microphone,audio,Runtime microphone enable,implemented,control present but capability gated,central config and persistence,P1,disable serves USB silence and survives reboot
