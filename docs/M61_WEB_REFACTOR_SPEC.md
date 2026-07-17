@@ -24,13 +24,20 @@ little-endian. Unknown magic, versions, lengths, commands, or ranges are
 rejected before state changes. Reports `0xF6` through `0xF9` are handled by the
 M61 itself; every other DualSense Feature Report keeps the controller proxy.
 
-## Configuration v1
+## Configuration v2
 
 The schema contains microphone enable, speaker enable, speaker route,
 automatic reconnect, M61 status LED enable, Q8 haptics gain, CPU governor,
-CPU profile, and safe manual frequency. The UI renders a control only when its
+CPU profile, safe manual frequency, 0–60 minute controller inactivity timeout,
+and host-suspend controller power policy. The UI renders a control only when its
 capability bit is present. Frequencies above the validated 400 MHz limit are
 never writable through the normal Web application.
+
+Release defaults keep the microphone disabled, the CPU fixed at 320 MHz,
+inactivity power-off disabled, and suspend power-off disabled. Enabling the
+microphone shows a realtime-load and stutter warning. Selecting realtime boost
+or 384/400 MHz shows power, temperature, and per-device stability warnings and
+requires confirmation before saving to Flash.
 
 Applying changes is immediate and serialized. Saving is a separate operation
 that writes one versioned, CRC-protected record to Flash. Invalid records fall
@@ -56,7 +63,8 @@ allocation-free, nonblocking, and safe in the USB control path.
 4. Operations: pairing, disconnect, forget, diagnostics export, and guarded
    ISP reboot.
 5. Power policy: configurable controller inactivity timeout, explicit
-   controller power-off, host-suspend policy, and reconnect behavior. Input
+   controller power-off, host-suspend policy, and reconnect behavior. Schema v2
+   accepts and migrates the existing schema-v1 Flash record. Input
    activity is derived from decoded M61 DualSense reports rather than copied
    platform-specific heuristics. Timeout `0` disables automatic power-off;
    nonzero values are bounded to 1–60 minutes. Power-off uses the DualSense

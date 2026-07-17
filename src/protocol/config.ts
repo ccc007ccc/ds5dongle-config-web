@@ -8,7 +8,7 @@ import {
   type M61Config,
 } from "./m61Management";
 
-export const CONFIG_BODY_VERSION = 1;
+export const CONFIG_BODY_VERSION = 2;
 export const CONFIG_BODY_SIZE = M61_CONFIG_BODY_SIZE;
 export const FEATURE_REPORT_PAYLOAD_SIZE = M61_FEATURE_PAYLOAD_SIZE;
 export type ConfigBody = M61Config;
@@ -27,7 +27,10 @@ export const DEFAULT_CONFIG: ConfigBody = {
     M61Capability.StatusLed |
     M61Capability.HapticsGain |
     M61Capability.Dvfs |
-    M61Capability.TelemetryV1,
+    M61Capability.TelemetryV1 |
+    M61Capability.IdlePowerOff |
+    M61Capability.ControllerPowerOff |
+    M61Capability.SuspendPowerOff,
   microphoneEnabled: false,
   speakerEnabled: true,
   autoReconnectEnabled: true,
@@ -37,6 +40,8 @@ export const DEFAULT_CONFIG: ConfigBody = {
   cpuProfile: 0,
   manualCpuMhz: 320,
   hapticsGainQ8: 0x0100,
+  idleTimeoutMinutes: 0,
+  powerOffOnUsbSuspend: false,
 };
 
 export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): ConfigBody {
@@ -71,6 +76,9 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.hapticsGainQ8) || config.hapticsGainQ8 < 0x0100 || config.hapticsGainQ8 > 0x0200) {
     issues.push({ field: "hapticsGainQ8" });
   }
+  if (!Number.isInteger(config.idleTimeoutMinutes) || config.idleTimeoutMinutes < 0 || config.idleTimeoutMinutes > 60) {
+    issues.push({ field: "idleTimeoutMinutes" });
+  }
   return issues;
 }
 
@@ -86,6 +94,8 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     cpuProfile: clampInteger(config.cpuProfile, 0, 3) as ConfigBody["cpuProfile"],
     manualCpuMhz: clampInteger(config.manualCpuMhz, 320, 400),
     hapticsGainQ8: clampInteger(config.hapticsGainQ8, 0x0100, 0x0200),
+    idleTimeoutMinutes: clampInteger(config.idleTimeoutMinutes, 0, 60),
+    powerOffOnUsbSuspend: Boolean(config.powerOffOnUsbSuspend),
   };
 }
 
@@ -102,6 +112,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     left.cpuProfile === right.cpuProfile &&
     left.manualCpuMhz === right.manualCpuMhz &&
     left.hapticsGainQ8 === right.hapticsGainQ8
+    && left.idleTimeoutMinutes === right.idleTimeoutMinutes
+    && left.powerOffOnUsbSuspend === right.powerOffOnUsbSuspend
   );
 }
 

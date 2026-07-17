@@ -30,6 +30,8 @@ const config: M61Config = {
   cpuProfile: 2,
   manualCpuMhz: 400,
   hapticsGainQ8: 0x0180,
+  idleTimeoutMinutes: 30,
+  powerOffOnUsbSuspend: true,
 };
 
 test("M61 config round trips with and without report ID", () => {

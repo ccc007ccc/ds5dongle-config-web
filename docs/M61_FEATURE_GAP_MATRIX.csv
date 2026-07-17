@@ -14,13 +14,13 @@ speaker_route,audio,Automatic mono stereo routing,implemented and persistent,imp
 haptics_gain,audio,Runtime haptics gain,implemented and persistent,implemented,saturating Q8 runtime scale,P1,no new audio drops at 1.0x to 2.0x
 dvfs,performance,Manual and realtime DVFS,implemented and hardware validated,implemented,central config persistence,P0,320 384 400 and realtime readback pass
 auto_reconnect,bluetooth,Reconnect saved controller,implemented and persistent,implemented,central config and persistence,P1,boot and link-loss behavior follows setting
-idle_poweroff,power,Power off inactive controller,not implemented,not implemented,M61 activity detector plus 0-60 minute policy,P1,timeout sends DualSense Feature 0x08 and link closes cleanly
-controller_poweroff,power,Explicit controller power off,not implemented,not implemented,guarded asynchronous M61 command,P1,Web action powers down controller without blocking USB callbacks
-host_suspend_power,power,Controller policy on host suspend,not implemented,not implemented,debounced suspend policy independent from idle timeout,P2,brief USB re-enumeration never powers off controller
+idle_poweroff,power,Power off inactive controller,implemented and hardware validated,implemented,M61 activity detector plus 0-60 minute policy,P1,60-second hardware fixture sends Feature 0x08 and closes the link
+controller_poweroff,power,Explicit controller power off,implemented and hardware validated,implemented,guarded asynchronous M61 command,P1,Web action powers down controller without blocking USB callbacks
+host_suspend_power,power,Controller policy on host suspend,implemented pending hardware validation,implemented,debounced suspend policy independent from idle timeout,P2,brief USB re-enumeration never powers off controller
 pairing,bluetooth,Pair scan disconnect forget,serial commands implemented,not implemented,asynchronous Web commands and status,P1,USB callbacks never block on discovery
 status_led,hardware,M61 RGB status LED,implemented and persistent,implemented,central config and persistence,P1,automatic states and disabled state pass
 diagnostics,maintenance,Export diagnostics,serial status implemented,not implemented,stable JSON export from telemetry,P2,no private memory layout exposed
-reboot_isp,maintenance,Enter UART download mode,implemented,not implemented,guarded maintenance action,P2,confirmation and recovery instructions present
+reboot_isp,maintenance,Enter UART download mode,warm reset reaches BootROM but eFuse read is unreliable,not implemented,physical BOOT plus RESET recovery flow,P2,manual ISP entry flashes reliably on BL616 hardware
 controller_identity,compatibility,DualSense Edge identity,not implemented,not shown,validated descriptors and translation,P3,Windows and protocol hardware suite pass
 remote_wake,power,USB remote wake,not validated,not shown,descriptor and suspend-path implementation,P3,host sleep/wake hardware test passes
 trigger_transform,input,Adaptive-trigger scaling,not implemented,not shown,bounded bypassable transform,P3,output vectors and controller tests pass

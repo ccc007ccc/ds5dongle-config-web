@@ -3,8 +3,8 @@ export const M61_COMMAND_REPORT_ID = 0xf6;
 export const M61_FIRMWARE_REPORT_ID = 0xf8;
 export const M61_TELEMETRY_REPORT_ID = 0xf9;
 export const M61_FEATURE_PAYLOAD_SIZE = 63;
-export const M61_CONFIG_SCHEMA_VERSION = 1;
-export const M61_CONFIG_BODY_SIZE = 16;
+export const M61_CONFIG_SCHEMA_VERSION = 2;
+export const M61_CONFIG_BODY_SIZE = 18;
 
 const MAGIC = new Uint8Array([0x4d, 0x36, 0x31, 0x43]); // M61C
 
@@ -12,6 +12,7 @@ export const M61Command = {
   ApplyConfig: 0x01,
   SaveConfig: 0x02,
   ReconnectUsb: 0x03,
+  PowerOffController: 0x04,
 } as const;
 export type M61CommandValue = (typeof M61Command)[keyof typeof M61Command];
 
@@ -24,6 +25,9 @@ export const M61Capability = {
   HapticsGain: 1 << 5,
   Dvfs: 1 << 6,
   TelemetryV1: 1 << 7,
+  IdlePowerOff: 1 << 8,
+  ControllerPowerOff: 1 << 9,
+  SuspendPowerOff: 1 << 10,
 } as const;
 
 export type M61SpeakerRoute = 0 | 1 | 2;
@@ -41,6 +45,8 @@ export interface M61Config {
   cpuProfile: M61CpuProfile;
   manualCpuMhz: number;
   hapticsGainQ8: number;
+  idleTimeoutMinutes: number;
+  powerOffOnUsbSuspend: boolean;
 }
 
 export interface M61Telemetry {
@@ -85,6 +91,8 @@ export function encodeM61Config(config: M61Config): Uint8Array<ArrayBuffer> {
   view.setUint8(11, config.cpuProfile);
   view.setUint16(12, config.manualCpuMhz, true);
   view.setUint16(14, config.hapticsGainQ8, true);
+  view.setUint8(16, config.idleTimeoutMinutes);
+  view.setUint8(17, config.powerOffOnUsbSuspend ? 0x01 : 0x00);
   return bytes;
 }
 
@@ -126,6 +134,8 @@ export function decodeM61Config(source: ArrayBuffer | DataView | Uint8Array): M6
     cpuProfile: view.getUint8(11) as M61CpuProfile,
     manualCpuMhz: view.getUint16(12, true),
     hapticsGainQ8: view.getUint16(14, true),
+    idleTimeoutMinutes: view.getUint8(16),
+    powerOffOnUsbSuspend: Boolean(view.getUint8(17) & 0x01),
   };
   validateM61Config(config);
   return config;
@@ -173,7 +183,7 @@ export function validateM61Config(config: M61Config): void {
     Number.isInteger(config.capabilities) &&
     config.capabilities >= 0 &&
     config.capabilities <= 0xffff &&
-    [config.microphoneEnabled, config.speakerEnabled, config.autoReconnectEnabled, config.statusLedEnabled].every(
+    [config.microphoneEnabled, config.speakerEnabled, config.autoReconnectEnabled, config.statusLedEnabled, config.powerOffOnUsbSuspend].every(
       (value) => typeof value === "boolean",
     ) &&
     Number.isInteger(config.speakerRoute) &&
@@ -190,7 +200,10 @@ export function validateM61Config(config: M61Config): void {
     config.manualCpuMhz <= 400 &&
     Number.isInteger(config.hapticsGainQ8) &&
     config.hapticsGainQ8 >= 0x0100 &&
-    config.hapticsGainQ8 <= 0x0200;
+    config.hapticsGainQ8 <= 0x0200 &&
+    Number.isInteger(config.idleTimeoutMinutes) &&
+    config.idleTimeoutMinutes >= 0 &&
+    config.idleTimeoutMinutes <= 60;
   if (!valid) {
     throw new M61ProtocolError("invalidConfig");
   }

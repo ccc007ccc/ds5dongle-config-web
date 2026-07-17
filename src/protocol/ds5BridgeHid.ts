@@ -20,6 +20,7 @@ const REPORT_GET_SIGNAL_STRENGTH = 0xf9;
 const CMD_UPDATE_CONFIG = 0x01;
 const CMD_SAVE_TO_FLASH = 0x02;
 const CMD_RECONNECT_USB = 0x03;
+const CMD_POWER_OFF_CONTROLLER = 0x04;
 
 export interface AudioActivityState {
   speakerActive: boolean;
@@ -112,6 +113,11 @@ export class Ds5BridgeHidClient {
   async reconnectUsb(): Promise<void> {
     await this.open();
     await this.device.sendFeatureReport(REPORT_SET_CONFIG, commandReport(CMD_RECONNECT_USB));
+  }
+
+  async powerOffController(): Promise<void> {
+    await this.open();
+    await this.device.sendFeatureReport(REPORT_SET_CONFIG, commandReport(CMD_POWER_OFF_CONTROLLER));
   }
 }
 

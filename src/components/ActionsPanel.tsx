@@ -1,8 +1,9 @@
-import { Download, Power, RefreshCw, RotateCcw, Save } from "lucide-react";
+import { Download, Power, PowerOff, RefreshCw, RotateCcw, Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
+import { M61Capability } from "../protocol/m61Management";
 
 interface ActionsPanelProps {
   bridge: UseDs5BridgeResult;
@@ -11,6 +12,9 @@ interface ActionsPanelProps {
 
 export function ActionsPanel({ bridge, isBusy }: ActionsPanelProps) {
   const { t } = useTranslation();
+  const controllerPowerOffSupported = Boolean(
+    bridge.config && (bridge.config.capabilities & M61Capability.ControllerPowerOff),
+  );
 
   return (
     <Card className="panel side-panel">
@@ -53,6 +57,17 @@ export function ActionsPanel({ bridge, isBusy }: ActionsPanelProps) {
         >
           <Power size={17} />
           {t("actions.reconnect")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={bridge.powerOffController}
+          disabled={!bridge.client || isBusy || !controllerPowerOffSupported}
+          title={t("actions.powerOffTitle")}
+        >
+          <PowerOff size={17} />
+          {t("actions.powerOff")}
         </Button>
         <Button
           type="button"

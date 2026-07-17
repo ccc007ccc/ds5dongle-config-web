@@ -18,7 +18,7 @@ import {
 } from "../protocol/ds5BridgeHid";
 import type { AudioActivityState } from "../protocol/ds5BridgeHid";
 
-type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | null;
+type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | "poweringOff" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
 const SIGNAL_STRENGTH_REFRESH_INTERVAL_MS = 5_000;
 
@@ -48,6 +48,7 @@ export interface UseDs5BridgeResult {
   readConfig: () => Promise<void>;
   saveToFlash: () => Promise<void>;
   reconnectUsb: () => Promise<void>;
+  powerOffController: () => Promise<void>;
   resetToDefaults: () => Promise<void>;
   clearError: () => void;
 }
@@ -267,6 +268,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     if (!client || isDirty) {
       return;
     }
+    const riskyPerformance = draft.microphoneEnabled || draft.cpuGovernor !== 0 || draft.cpuProfile !== 0;
+    if (riskyPerformance && !window.confirm(t("actions.savePerformanceConfirm"))) return;
 
     setOperation("saving");
     try {
@@ -278,7 +281,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     } finally {
       setOperation(null);
     }
-  }, [client, isDirty, t]);
+  }, [client, draft, isDirty, t]);
 
   const reconnectUsb = useCallback(async () => {
     if (!client) {
@@ -289,6 +292,19 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     try {
       await client.reconnectUsb();
       setNeedsUsbReconnect(false);
+      setError(null);
+    } catch (cause) {
+      setError(errorMessage(cause, t));
+    } finally {
+      setOperation(null);
+    }
+  }, [client, t]);
+
+  const powerOffController = useCallback(async () => {
+    if (!client || !window.confirm(t("actions.powerOffConfirm"))) return;
+    setOperation("poweringOff");
+    try {
+      await client.powerOffController();
       setError(null);
     } catch (cause) {
       setError(errorMessage(cause, t));
@@ -417,6 +433,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     readConfig,
     saveToFlash,
     reconnectUsb,
+    powerOffController,
     resetToDefaults,
     clearError: () => setError(null),
   };
@@ -436,6 +453,8 @@ function operationLabel(operation: Exclude<Operation, null>, t: (key: string) =>
       return t("status.saving");
     case "reconnecting":
       return t("status.reconnecting");
+    case "poweringOff":
+      return t("status.poweringOff");
   }
 }
 

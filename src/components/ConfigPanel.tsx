@@ -33,6 +33,7 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               disabled={disconnected || !supports(M61Capability.Microphone)}
               onChange={(value) => bridge.setDraftField("microphoneEnabled", value)}
             />
+            {config.microphoneEnabled && <div className="state-warning">{t("config.warnings.microphoneLoad")}</div>}
             <ToggleControl
               label={t("config.speakerEnabled")}
               value={config.speakerEnabled}
@@ -96,6 +97,9 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               disabled={disconnected || !supports(M61Capability.Dvfs) || config.cpuProfile !== 3}
               onChange={(value) => bridge.setDraftField("manualCpuMhz", value)}
             />
+            {(config.cpuGovernor !== 0 || config.cpuProfile !== 0 || config.manualCpuMhz > 320) && (
+              <div className="state-warning">{t("config.warnings.overclock")}</div>
+            )}
           </section>
 
           <section className="config-section">
@@ -113,6 +117,23 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               helpContent={t("config.help.statusLedEnabled")}
               disabled={disconnected || !supports(M61Capability.StatusLed)}
               onChange={(value) => bridge.setDraftField("statusLedEnabled", value)}
+            />
+            <IntegerControl
+              label={t("config.idleTimeoutMinutes")}
+              value={config.idleTimeoutMinutes}
+              min={0}
+              max={60}
+              helpContent={t("config.help.idleTimeoutMinutes")}
+              issue={fieldIssue(bridge.issues, "idleTimeoutMinutes")}
+              disabled={disconnected || !supports(M61Capability.IdlePowerOff)}
+              onChange={(value) => bridge.setDraftField("idleTimeoutMinutes", value)}
+            />
+            <ToggleControl
+              label={t("config.powerOffOnUsbSuspend")}
+              value={config.powerOffOnUsbSuspend}
+              helpContent={t("config.help.powerOffOnUsbSuspend")}
+              disabled={disconnected || !supports(M61Capability.SuspendPowerOff)}
+              onChange={(value) => bridge.setDraftField("powerOffOnUsbSuspend", value)}
             />
           </section>
         </div>
