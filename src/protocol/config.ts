@@ -27,7 +27,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
     M61Capability.StatusLed |
     M61Capability.HapticsGain |
     M61Capability.Dvfs |
-    M61Capability.TelemetryV1 |
+    M61Capability.Telemetry |
     M61Capability.IdlePowerOff |
     M61Capability.ControllerPowerOff |
     M61Capability.SuspendPowerOff,

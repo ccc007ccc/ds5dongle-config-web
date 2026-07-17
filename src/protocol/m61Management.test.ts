@@ -72,6 +72,67 @@ test("telemetry preserves the RSSI and activity compatibility prefix", () => {
     speakerStereo: true,
     currentCpuMhz: 400,
     requestedCpuMhz: 384,
+    pairingActive: false,
+    discoveryActive: false,
+    savedController: false,
+    configLoaded: false,
+    usbSuspended: false,
+    lastManagementCommand: 0,
+    lastManagementError: 0,
+    managementSequence: 0,
+    usbInputDropped: 0,
+    hostReportDropped: 0,
+    audioIngressDropped: 0,
+    hapticsQueueDropped: 0,
+    speakerErrors: 0,
+    microphoneErrors: 0,
+    featureGetQueueDepth: 0,
+    featureSetQueueDepth: 0,
+    hapticsQueueDepth: 0,
+    speakerQueueDepth: 0,
+  });
+});
+
+test("telemetry v2 decodes management and health fields", () => {
+  const report = new Uint8Array(45);
+  report[0] = 0xf9;
+  const payload = report.subarray(1);
+  const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+  payload.set([0xb8, 0x80, 2, 0xf3, 0x40, 0x01, 0x40, 0x01, 1, M61Command.ForgetController]);
+  view.setInt16(10, -107, true);
+  [7, 11, 13, 17, 19, 23].forEach((value, index) => view.setUint32(12 + index * 4, value, true));
+  view.setUint32(36, 29, true);
+  payload.set([2, 3, 4, 5], 40);
+
+  assert.deepEqual(decodeM61Telemetry(report), {
+    rssi: -72,
+    speakerActive: false,
+    microphoneActive: false,
+    version: 2,
+    bluetoothConnected: true,
+    usbConfigured: true,
+    headphonesConnected: false,
+    speakerStereo: false,
+    currentCpuMhz: 320,
+    requestedCpuMhz: 320,
+    pairingActive: true,
+    discoveryActive: true,
+    savedController: true,
+    configLoaded: true,
+    usbSuspended: true,
+    lastManagementCommand: M61Command.ForgetController,
+    lastManagementError: -107,
+    managementSequence: 7,
+    usbInputDropped: 11,
+    hostReportDropped: 13,
+    audioIngressDropped: 17,
+    hapticsQueueDropped: 19,
+    speakerErrors: 23,
+    microphoneErrors: 29,
+    featureGetQueueDepth: 2,
+    featureSetQueueDepth: 3,
+    hapticsQueueDepth: 4,
+    speakerQueueDepth: 5,
   });
 });
 

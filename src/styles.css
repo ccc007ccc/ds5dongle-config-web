@@ -764,6 +764,11 @@ h2 {
   font-weight: 650;
 }
 
+.state-box .diagnostics-list {
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
 .state-warning {
   margin-top: 10px;
   padding: 9px 10px;

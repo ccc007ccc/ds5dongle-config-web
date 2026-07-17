@@ -17,8 +17,9 @@ import {
   webHidAvailable,
 } from "../protocol/ds5BridgeHid";
 import type { AudioActivityState } from "../protocol/ds5BridgeHid";
+import type { M61Telemetry } from "../protocol/m61Management";
 
-type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | "poweringOff" | null;
+type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | "poweringOff" | "pairing" | "disconnectingController" | "forgettingController" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
 const SIGNAL_STRENGTH_REFRESH_INTERVAL_MS = 5_000;
 
@@ -29,6 +30,7 @@ export interface UseDs5BridgeResult {
   firmwareVersion: string | null;
   signalStrengthRssi: number | null;
   audioActivity: AudioActivityState | null;
+  telemetry: M61Telemetry | null;
   authorizedDevices: HIDDevice[];
   config: ConfigBody | null;
   draft: ConfigBody;
@@ -49,6 +51,9 @@ export interface UseDs5BridgeResult {
   saveToFlash: () => Promise<void>;
   reconnectUsb: () => Promise<void>;
   powerOffController: () => Promise<void>;
+  pairController: () => Promise<void>;
+  disconnectController: () => Promise<void>;
+  forgetController: () => Promise<void>;
   resetToDefaults: () => Promise<void>;
   clearError: () => void;
 }
@@ -61,6 +66,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const [firmwareVersion, setFirmwareVersion] = useState<string | null>(null);
   const [signalStrengthRssi, setSignalStrengthRssi] = useState<number | null>(null);
   const [audioActivity, setAudioActivity] = useState<AudioActivityState | null>(null);
+  const [telemetry, setTelemetry] = useState<M61Telemetry | null>(null);
   const [config, setConfig] = useState<ConfigBody | null>(null);
   const [draft, setDraft] = useState<ConfigBody>(DEFAULT_CONFIG);
   const [operation, setOperation] = useState<Operation>(null);
@@ -144,11 +150,13 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       if (clientRef.current === nextClient) {
         setSignalStrengthRssi(nextSignalStrength.rssi);
         setAudioActivity(nextSignalStrength.audioActivity);
+        setTelemetry(nextSignalStrength.telemetry);
       }
     } catch {
       if (clientRef.current === nextClient) {
         setSignalStrengthRssi(null);
         setAudioActivity(null);
+        setTelemetry(null);
       }
     }
   }, []);
@@ -313,6 +321,36 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, [client, t]);
 
+  const runControllerCommand = useCallback(async (
+    operationName: "pairing" | "disconnectingController" | "forgettingController",
+    command: (activeClient: Ds5BridgeHidClient) => Promise<void>,
+  ) => {
+    if (!client) return;
+    setOperation(operationName);
+    try {
+      await command(client);
+      setError(null);
+      window.setTimeout(() => void readSignalStrengthWithClient(client), 500);
+    } catch (cause) {
+      setError(errorMessage(cause, t));
+    } finally {
+      setOperation(null);
+    }
+  }, [client, readSignalStrengthWithClient, t]);
+
+  const pairController = useCallback(() =>
+    runControllerCommand("pairing", (activeClient) => activeClient.pairController()), [runControllerCommand]);
+
+  const disconnectController = useCallback(async () => {
+    if (!window.confirm(t("actions.disconnectConfirm"))) return;
+    await runControllerCommand("disconnectingController", (activeClient) => activeClient.disconnectController());
+  }, [runControllerCommand, t]);
+
+  const forgetController = useCallback(async () => {
+    if (!window.confirm(t("actions.forgetConfirm"))) return;
+    await runControllerCommand("forgettingController", (activeClient) => activeClient.forgetController());
+  }, [runControllerCommand, t]);
+
   const setDraftField = useCallback(
     <Key extends keyof ConfigBody>(field: Key, value: ConfigBody[Key]) => {
       if (!clientRef.current?.device.opened) {
@@ -385,6 +423,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         setFirmwareVersion(null);
         setSignalStrengthRssi(null);
         setAudioActivity(null);
+        setTelemetry(null);
         setConfig(null);
         setDraft(DEFAULT_CONFIG);
         setNeedsUsbReconnect(false);
@@ -414,6 +453,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     firmwareVersion,
     signalStrengthRssi,
     audioActivity,
+    telemetry,
     authorizedDevices,
     config,
     draft,
@@ -434,6 +474,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     saveToFlash,
     reconnectUsb,
     powerOffController,
+    pairController,
+    disconnectController,
+    forgetController,
     resetToDefaults,
     clearError: () => setError(null),
   };
@@ -455,6 +498,12 @@ function operationLabel(operation: Exclude<Operation, null>, t: (key: string) =>
       return t("status.reconnecting");
     case "poweringOff":
       return t("status.poweringOff");
+    case "pairing":
+      return t("status.pairing");
+    case "disconnectingController":
+      return t("status.disconnectingController");
+    case "forgettingController":
+      return t("status.forgettingController");
   }
 }
 

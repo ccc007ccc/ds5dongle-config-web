@@ -13,6 +13,9 @@ export const M61Command = {
   SaveConfig: 0x02,
   ReconnectUsb: 0x03,
   PowerOffController: 0x04,
+  PairController: 0x05,
+  DisconnectController: 0x06,
+  ForgetController: 0x07,
 } as const;
 export type M61CommandValue = (typeof M61Command)[keyof typeof M61Command];
 
@@ -24,7 +27,7 @@ export const M61Capability = {
   StatusLed: 1 << 4,
   HapticsGain: 1 << 5,
   Dvfs: 1 << 6,
-  TelemetryV1: 1 << 7,
+  Telemetry: 1 << 7,
   IdlePowerOff: 1 << 8,
   ControllerPowerOff: 1 << 9,
   SuspendPowerOff: 1 << 10,
@@ -60,6 +63,24 @@ export interface M61Telemetry {
   speakerStereo: boolean;
   currentCpuMhz: number | null;
   requestedCpuMhz: number | null;
+  pairingActive: boolean;
+  discoveryActive: boolean;
+  savedController: boolean;
+  configLoaded: boolean;
+  usbSuspended: boolean;
+  lastManagementCommand: number;
+  lastManagementError: number;
+  managementSequence: number;
+  usbInputDropped: number;
+  hostReportDropped: number;
+  audioIngressDropped: number;
+  hapticsQueueDropped: number;
+  speakerErrors: number;
+  microphoneErrors: number;
+  featureGetQueueDepth: number;
+  featureSetQueueDepth: number;
+  hapticsQueueDepth: number;
+  speakerQueueDepth: number;
 }
 
 export class M61ProtocolError extends Error {
@@ -175,7 +196,29 @@ export function decodeM61Telemetry(source: ArrayBuffer | DataView | Uint8Array):
     speakerStereo: state !== undefined && Boolean(state & 0x08),
     currentCpuMhz: bytes.byteLength - offset >= 6 ? view.getUint16(offset + 4, true) : null,
     requestedCpuMhz: bytes.byteLength - offset >= 8 ? view.getUint16(offset + 6, true) : null,
+    pairingActive: state !== undefined && Boolean(state & 0x10),
+    discoveryActive: state !== undefined && Boolean(state & 0x20),
+    savedController: state !== undefined && Boolean(state & 0x40),
+    configLoaded: state !== undefined && Boolean(state & 0x80),
+    usbSuspended: bytes.byteLength - offset >= 9 && Boolean(view.getUint8(offset + 8) & 0x01),
+    lastManagementCommand: bytes.byteLength - offset >= 10 ? view.getUint8(offset + 9) : 0,
+    lastManagementError: bytes.byteLength - offset >= 12 ? view.getInt16(offset + 10, true) : 0,
+    managementSequence: readUint32(view, bytes.byteLength - offset, offset + 12, 16),
+    usbInputDropped: readUint32(view, bytes.byteLength - offset, offset + 16, 20),
+    hostReportDropped: readUint32(view, bytes.byteLength - offset, offset + 20, 24),
+    audioIngressDropped: readUint32(view, bytes.byteLength - offset, offset + 24, 28),
+    hapticsQueueDropped: readUint32(view, bytes.byteLength - offset, offset + 28, 32),
+    speakerErrors: readUint32(view, bytes.byteLength - offset, offset + 32, 36),
+    microphoneErrors: readUint32(view, bytes.byteLength - offset, offset + 36, 40),
+    featureGetQueueDepth: bytes.byteLength - offset >= 41 ? view.getUint8(offset + 40) : 0,
+    featureSetQueueDepth: bytes.byteLength - offset >= 42 ? view.getUint8(offset + 41) : 0,
+    hapticsQueueDepth: bytes.byteLength - offset >= 43 ? view.getUint8(offset + 42) : 0,
+    speakerQueueDepth: bytes.byteLength - offset >= 44 ? view.getUint8(offset + 43) : 0,
   };
+}
+
+function readUint32(view: DataView, available: number, offset: number, required: number): number {
+  return available >= required ? view.getUint32(offset, true) : 0;
 }
 
 export function validateM61Config(config: M61Config): void {

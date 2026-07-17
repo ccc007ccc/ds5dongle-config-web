@@ -4,7 +4,8 @@ export const zh = {
   theme: { label: "主题", light: "浅色", dark: "深色", system: "跟随系统" },
   status: {
     webHidUnavailable: "WebHID 不可用", connecting: "正在连接", reading: "正在读取 M61 配置", readingFirmware: "正在读取固件信息",
-    applying: "正在应用配置", saving: "正在保存到 Flash", reconnecting: "正在重连 USB", poweringOff: "正在关闭手柄", ready: "等待连接",
+    applying: "正在应用配置", saving: "正在保存到 Flash", reconnecting: "正在重连 USB", poweringOff: "正在关闭手柄",
+    pairing: "正在进入配对模式", disconnectingController: "正在断开手柄", forgettingController: "正在忘记手柄", ready: "等待连接",
     unsaved: "有未保存修改", applied: "已应用到 M61", saved: "已保存到 Flash", connected: "已连接",
   },
   notice: { webHidUnsupported: "请使用 Chromium 内核浏览器，并通过 HTTPS 或 localhost 访问 WebHID。" },
@@ -60,8 +61,13 @@ export const zh = {
     reconnectRequired: "此修改需要 USB 重连后生效。", powerOff: "关闭手柄", powerOffTitle: "向当前 DualSense 发送关机命令",
     powerOffConfirm: "确定关闭当前连接的 DualSense 手柄吗？", reset: "发布默认值", resetTitle: "应用并保存 M61 发布默认值", state: "状态",
     savePerformanceConfirm: "当前配置启用了麦克风、实时升频或 384/400 MHz 档位。它可能增加负载、功耗、温升或卡顿风险，确认保存到 Flash 吗？",
+    pair: "配对新手柄", pairTitle: "断开当前手柄并进入 M61 配对扫描",
+    disconnect: "断开手柄", disconnectTitle: "断开当前 DualSense", disconnectConfirm: "确定断开当前 DualSense 吗？",
+    forget: "忘记手柄", forgetTitle: "清除保存地址和蓝牙 Link Key", forgetConfirm: "确定忘记已配对手柄吗？之后需要重新配对。",
+    exportDiagnostics: "导出诊断", exportDiagnosticsTitle: "导出 M61 配置和稳定诊断 JSON",
   },
   toggle: { enabled: "已启用", disabled: "已禁用" },
+  diagnostics: { management: "管理序号/错误", usbDrops: "USB 输入丢弃", hostDrops: "主机报告丢弃", audioDrops: "音频队列丢弃", codecErrors: "Codec 错误" },
   validation: {
     capabilities: "M61 能力位无效", speakerRoute: "扬声器路由无效", cpuGovernor: "CPU governor 无效",
     cpuProfile: "CPU 档位无效", manualCpuMhz: "CPU 频率必须在 320–400 MHz", hapticsGainQ8: "触觉 Q8 增益必须在 256–512",

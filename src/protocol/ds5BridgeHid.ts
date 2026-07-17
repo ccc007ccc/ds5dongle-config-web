@@ -4,7 +4,7 @@ import {
   decodeConfigBody,
   encodeConfigBody,
 } from "./config";
-import { decodeM61Telemetry } from "./m61Management";
+import { decodeM61Telemetry, type M61Telemetry } from "./m61Management";
 
 export const SONY_VENDOR_ID = 0x054c;
 export const SUPPORTED_PRODUCT_IDS = [0x0ce6] as const;
@@ -21,6 +21,11 @@ const CMD_UPDATE_CONFIG = 0x01;
 const CMD_SAVE_TO_FLASH = 0x02;
 const CMD_RECONNECT_USB = 0x03;
 const CMD_POWER_OFF_CONTROLLER = 0x04;
+const CMD_PAIR_CONTROLLER = 0x05;
+const CMD_DISCONNECT_CONTROLLER = 0x06;
+const CMD_FORGET_CONTROLLER = 0x07;
+const MANAGEMENT_RESULT_TIMEOUT_MS = 1_500;
+const MANAGEMENT_RESULT_POLL_MS = 50;
 
 export interface AudioActivityState {
   speakerActive: boolean;
@@ -30,6 +35,7 @@ export interface AudioActivityState {
 export interface SignalStrengthReport {
   rssi: number | null;
   audioActivity: AudioActivityState | null;
+  telemetry: M61Telemetry;
 }
 
 export class Ds5BridgeHidClient {
@@ -102,12 +108,12 @@ export class Ds5BridgeHidClient {
     const body = encodeConfigBody(config);
     const report = commandReport(CMD_UPDATE_CONFIG);
     report.set(body, 1);
-    await this.device.sendFeatureReport(REPORT_SET_CONFIG, report);
+    await this.sendManagedCommand(CMD_UPDATE_CONFIG, report);
   }
 
   async saveToFlash(): Promise<void> {
     await this.open();
-    await this.device.sendFeatureReport(REPORT_SET_CONFIG, commandReport(CMD_SAVE_TO_FLASH));
+    await this.sendManagedCommand(CMD_SAVE_TO_FLASH);
   }
 
   async reconnectUsb(): Promise<void> {
@@ -117,7 +123,44 @@ export class Ds5BridgeHidClient {
 
   async powerOffController(): Promise<void> {
     await this.open();
-    await this.device.sendFeatureReport(REPORT_SET_CONFIG, commandReport(CMD_POWER_OFF_CONTROLLER));
+    await this.sendManagedCommand(CMD_POWER_OFF_CONTROLLER);
+  }
+
+  async pairController(): Promise<void> {
+    await this.open();
+    await this.sendManagedCommand(CMD_PAIR_CONTROLLER);
+  }
+
+  async disconnectController(): Promise<void> {
+    await this.open();
+    await this.sendManagedCommand(CMD_DISCONNECT_CONTROLLER);
+  }
+
+  async forgetController(): Promise<void> {
+    await this.open();
+    await this.sendManagedCommand(CMD_FORGET_CONTROLLER);
+  }
+
+  private async sendManagedCommand(command: number, report = commandReport(command)): Promise<void> {
+    const before = await this.readSignalStrength();
+    await this.device.sendFeatureReport(REPORT_SET_CONFIG, report);
+    const deadline = performance.now() + MANAGEMENT_RESULT_TIMEOUT_MS;
+
+    while (performance.now() < deadline) {
+      const result = await this.readSignalStrength();
+      if (result.telemetry.managementSequence !== before.telemetry.managementSequence &&
+          result.telemetry.lastManagementCommand === command) {
+        if (result.telemetry.lastManagementError !== 0) {
+          throw new Error(
+            `M61 command 0x${command.toString(16).padStart(2, "0")} failed (${result.telemetry.lastManagementError})`,
+          );
+        }
+        return;
+      }
+      await delay(MANAGEMENT_RESULT_POLL_MS);
+    }
+
+    throw new Error(`M61 command 0x${command.toString(16).padStart(2, "0")} timed out`);
   }
 }
 
@@ -183,7 +226,12 @@ function decodeSignalStrength(source: ArrayBuffer | DataView | Uint8Array): Sign
       speakerActive: telemetry.speakerActive,
       micActive: telemetry.microphoneActive,
     },
+    telemetry,
   };
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
 function trimTrailingZeros(bytes: Uint8Array): Uint8Array {

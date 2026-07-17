@@ -44,12 +44,14 @@ that writes one versioned, CRC-protected record to Flash. Invalid records fall
 back to the measured release defaults. Flash access and USB cycling execute in
 task context, never in a HID callback or realtime audio path.
 
-## Telemetry v1
+## Telemetry v2
 
 Telemetry exposes stable product data: Bluetooth connection and RSSI validity,
 USB configured/suspended state, speaker and microphone activity, headset and
-effective channel route, current/requested CPU clock, bounded queue/drop/error
-counters, configuration state, and last management error. Encoding is static,
+effective channel route, current/requested CPU clock, pairing/discovery/saved
+controller state, bounded queue/drop/error counters, configuration state, and
+last management command/error. The first eight bytes remain compatible with
+telemetry v1. Encoding is static,
 allocation-free, nonblocking, and safe in the USB control path.
 
 ## Delivery packages
