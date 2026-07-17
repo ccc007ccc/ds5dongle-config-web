@@ -55,7 +55,13 @@ allocation-free, nonblocking, and safe in the USB control path.
    and Diagnostics sections with complete English/Chinese coverage.
 4. Operations: pairing, disconnect, forget, diagnostics export, and guarded
    ISP reboot.
-5. Hardware release: full-load audio, RAM/ITCM, reconnect, power-cycle, and
+5. Power policy: configurable controller inactivity timeout, explicit
+   controller power-off, host-suspend policy, and reconnect behavior. Input
+   activity is derived from decoded M61 DualSense reports rather than copied
+   platform-specific heuristics. Timeout `0` disables automatic power-off;
+   nonzero values are bounded to 1–60 minutes. Power-off uses the DualSense
+   Bluetooth Feature Report `0x08`, then observes the normal link teardown.
+6. Hardware release: full-load audio, RAM/ITCM, reconnect, power-cycle, and
    Chromium WebHID acceptance.
 
 ## Performance and safety gates

@@ -1,21 +1,24 @@
 id,area,capability,firmware_status,web_status,target,priority,acceptance
 transport,protocol,WebHID connection,implemented,implemented,M61 device negotiation,P0,M61C config report is required before controls unlock
 config_read,protocol,Read report 0xF7,implemented,implemented,versioned M61 config,P0,hardware returns schema v1 and Web fixture matches
-config_apply,protocol,Apply command 0xF6/0x01,implemented for DVFS,implemented,all advertised capabilities apply atomically,P0,write and readback match on hardware
-config_save,protocol,Save command 0xF6/0x02,DVFS persistence only,implemented,one CRC-protected M61 record,P0,power-cycle restores every advertised field
+config_apply,protocol,Apply command 0xF6/0x01,implemented and hardware validated,implemented,all advertised capabilities apply atomically,P0,write and readback match on hardware
+config_save,protocol,Save command 0xF6/0x02,CRC record implemented and reset validated,implemented,one CRC-protected M61 record,P0,power-cycle restores every advertised field
 usb_reconnect,protocol,USB reconnect command,implemented,implemented,deferred safe USB cycle,P0,Web reconnect recovers the same authorized device
 firmware_version,telemetry,Firmware report 0xF8,implemented,implemented,semantic version revision and build profile,P0,UI renders structured M61 build metadata
 live_telemetry,telemetry,Telemetry report 0xF9,basic v1 implemented,basic display implemented,stable Bluetooth USB audio and CPU snapshot,P1,fixture and hardware reports agree
 rssi,telemetry,Connected-controller RSSI,not implemented,unavailable state implemented,periodic BR/EDR RSSI sample,P1,validity and signed dBm are displayed
 health,telemetry,Queue and codec health,serial diagnostics available,not implemented,compact saturating counters,P1,full-load warning thresholds validated
 microphone,audio,Runtime microphone enable,implemented,control present but capability gated,central config and persistence,P1,disable serves USB silence and survives reboot
-speaker_gate,audio,Runtime speaker enable,not implemented,control present but capability gated,gate speaker without disabling haptics,P1,hardware audio and haptics tests pass
-speaker_route,audio,Automatic mono stereo routing,implemented,control present but capability gated,central config and persistence,P1,jack and forced routes survive reboot
-haptics_gain,audio,Runtime haptics gain,fixed at 1.0x,control present but capability gated,saturating Q8 runtime scale,P1,no new audio drops at 1.0x to 2.0x
+speaker_gate,audio,Runtime speaker enable,implemented,implemented,gate speaker without disabling haptics,P1,hardware audio and haptics tests pass
+speaker_route,audio,Automatic mono stereo routing,implemented and persistent,implemented,central config and persistence,P1,jack and forced routes survive reboot
+haptics_gain,audio,Runtime haptics gain,implemented and persistent,implemented,saturating Q8 runtime scale,P1,no new audio drops at 1.0x to 2.0x
 dvfs,performance,Manual and realtime DVFS,implemented and hardware validated,implemented,central config persistence,P0,320 384 400 and realtime readback pass
-auto_reconnect,bluetooth,Reconnect saved controller,runtime implemented,control present but capability gated,central config and persistence,P1,boot and link-loss behavior follows setting
+auto_reconnect,bluetooth,Reconnect saved controller,implemented and persistent,implemented,central config and persistence,P1,boot and link-loss behavior follows setting
+idle_poweroff,power,Power off inactive controller,not implemented,not implemented,M61 activity detector plus 0-60 minute policy,P1,timeout sends DualSense Feature 0x08 and link closes cleanly
+controller_poweroff,power,Explicit controller power off,not implemented,not implemented,guarded asynchronous M61 command,P1,Web action powers down controller without blocking USB callbacks
+host_suspend_power,power,Controller policy on host suspend,not implemented,not implemented,debounced suspend policy independent from idle timeout,P2,brief USB re-enumeration never powers off controller
 pairing,bluetooth,Pair scan disconnect forget,serial commands implemented,not implemented,asynchronous Web commands and status,P1,USB callbacks never block on discovery
-status_led,hardware,M61 RGB status LED,runtime implemented,control present but capability gated,central config and persistence,P1,automatic states and disabled state pass
+status_led,hardware,M61 RGB status LED,implemented and persistent,implemented,central config and persistence,P1,automatic states and disabled state pass
 diagnostics,maintenance,Export diagnostics,serial status implemented,not implemented,stable JSON export from telemetry,P2,no private memory layout exposed
 reboot_isp,maintenance,Enter UART download mode,implemented,not implemented,guarded maintenance action,P2,confirmation and recovery instructions present
 controller_identity,compatibility,DualSense Edge identity,not implemented,not shown,validated descriptors and translation,P3,Windows and protocol hardware suite pass

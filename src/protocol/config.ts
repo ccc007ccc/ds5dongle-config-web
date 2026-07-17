@@ -19,7 +19,15 @@ export interface ConfigValidationIssue {
 }
 
 export const DEFAULT_CONFIG: ConfigBody = {
-  capabilities: M61Capability.Dvfs | M61Capability.TelemetryV1,
+  capabilities:
+    M61Capability.Microphone |
+    M61Capability.SpeakerGate |
+    M61Capability.SpeakerRoute |
+    M61Capability.AutoReconnect |
+    M61Capability.StatusLed |
+    M61Capability.HapticsGain |
+    M61Capability.Dvfs |
+    M61Capability.TelemetryV1,
   microphoneEnabled: false,
   speakerEnabled: true,
   autoReconnectEnabled: true,
