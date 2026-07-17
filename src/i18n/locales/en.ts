@@ -47,6 +47,7 @@ export const en = {
     cpuGovernors: { manual: "Manual lock", realtime: "Realtime workload governor" },
     cpuProfiles: { eco: "Eco · 320 MHz", balanced: "Balanced · 384 MHz", performance: "Performance · 400 MHz", custom: "Custom · 320–400 MHz" },
     help: {
+      open: "View help", close: "Close help",
       microphoneEnabled: "Disabled by release default. The USB microphone remains present and serves silence while disabled.",
       speakerEnabled: "Disables controller speaker audio without disabling HD haptics.",
       hapticsGainQ8: "256 is 1.0× and 512 is 2.0×. The firmware applies saturating scaling.",

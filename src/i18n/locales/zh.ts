@@ -42,6 +42,7 @@ export const zh = {
     cpuGovernors: { manual: "固定频率", realtime: "实时负载调频" },
     cpuProfiles: { eco: "节能 · 320 MHz", balanced: "均衡 · 384 MHz", performance: "性能 · 400 MHz", custom: "自定义 · 320–400 MHz" },
     help: {
+      open: "查看说明", close: "关闭说明",
       microphoneEnabled: "发布默认关闭。关闭时 USB 麦克风接口仍存在，但只返回静音数据。",
       speakerEnabled: "关闭手柄扬声器音频，但不能关闭 HD 震动。",
       hapticsGainQ8: "256 等于 1.0 倍，512 等于 2.0 倍；固件使用饱和缩放。",
