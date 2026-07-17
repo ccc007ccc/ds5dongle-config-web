@@ -696,7 +696,7 @@ h2 {
   }
 
   .side-panel {
-    max-height: calc(100svh - clamp(10px, 1.8vh, 18px) * 2 - 152px);
+    max-height: none;
   }
 }
 
@@ -767,6 +767,8 @@ h2 {
 .state-box .diagnostics-list {
   color: var(--muted-foreground);
   font-weight: 600;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .state-warning {
