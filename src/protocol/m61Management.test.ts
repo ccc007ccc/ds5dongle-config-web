@@ -18,6 +18,7 @@ import {
 } from "./m61Management.ts";
 
 const config: M61Config = {
+  schemaVersion: 5,
   capabilities:
     M61Capability.Microphone |
     M61Capability.SpeakerRoute |
@@ -37,6 +38,8 @@ const config: M61Config = {
   leftStickDeadzonePercent: 8,
   rightStickDeadzonePercent: 12,
   usbPollingRateMode: 2,
+  statusLedBrightnessPercent: 35,
+  audioBufferLength: 64,
 };
 
 test("M61 config round trips with and without report ID", () => {
@@ -49,13 +52,13 @@ test("M61 config round trips with and without report ID", () => {
 });
 
 test("retired schema-v4 polling value migrates to fixed 500 Hz", () => {
-  const encoded = encodeM61Config(config);
+  const encoded = encodeM61Config({ ...config, schemaVersion: 4 });
   encoded[20] = 3;
   assert.equal(decodeM61Config(encoded).usbPollingRateMode, 2);
 });
 
 test("unknown polling values are rejected instead of silently clamped", () => {
-  const encoded = encodeM61Config(config);
+  const encoded = encodeM61Config({ ...config, schemaVersion: 4 });
   encoded[20] = 4;
   assert.throws(() => decodeM61Config(encoded), (error: unknown) => {
     return error instanceof M61ProtocolError && error.code === "invalidConfig";
@@ -81,6 +84,28 @@ test("release defaults preserve fields hidden by device capabilities", () => {
   assert.equal(defaults.cpuProfile, current.cpuProfile);
   assert.equal(defaults.manualCpuMhz, current.manualCpuMhz);
   assert.equal(defaults.usbPollingRateMode, current.usbPollingRateMode);
+  assert.equal(defaults.statusLedBrightnessPercent, current.statusLedBrightnessPercent);
+  assert.equal(defaults.audioBufferLength, current.audioBufferLength);
+});
+
+test("schema-v4 config receives safe defaults for new v5 controls", () => {
+  const legacy = encodeM61Config({ ...config, schemaVersion: 4 });
+  const decoded = decodeM61Config(legacy);
+  assert.equal(decoded.schemaVersion, 4);
+  assert.equal(decoded.statusLedBrightnessPercent, 12);
+  assert.equal(decoded.audioBufferLength, 48);
+});
+
+test("schema-v1 through v4 bodies remain decodable", () => {
+  const expectedSizes = [0, 16, 18, 20, 21];
+  for (let schemaVersion = 1; schemaVersion <= 4; schemaVersion += 1) {
+    const encoded = encodeM61Config({ ...config, schemaVersion });
+    assert.equal(encoded.length, expectedSizes[schemaVersion]);
+    const decoded = decodeM61Config(encoded);
+    assert.equal(decoded.schemaVersion, schemaVersion);
+    assert.equal(decoded.statusLedBrightnessPercent, 12);
+    assert.equal(decoded.audioBufferLength, 48);
+  }
 });
 
 test("performance warning follows the effective CPU profile", () => {

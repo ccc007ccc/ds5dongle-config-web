@@ -3,9 +3,10 @@ import { Cpu, Gamepad2, Radio, Volume2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
-import { fieldIssue, hasCapability, usesElevatedCpuPerformance } from "../protocol/config";
+import { DEFAULT_CONFIG, fieldIssue, hasCapability, usesElevatedCpuPerformance } from "../protocol/config";
 import { M61Capability } from "../protocol/m61Management";
 import { IntegerControl } from "./config/IntegerControl";
+import { StickDeadzonePreview } from "./config/StickDeadzonePreview";
 import { ToggleControl } from "./config/ToggleControl";
 
 export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
@@ -64,9 +65,33 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               disabled={controlsDisabled || !supports(M61Capability.HapticsGain)}
               onChange={(value) => bridge.setDraftField("hapticsGainQ8", value)}
             />
+            <IntegerControl
+              label={t("config.audioBufferLength")}
+              value={config.audioBufferLength}
+              min={16}
+              max={127}
+              helpContent={t("config.help.audioBufferLength")}
+              issue={fieldIssue(bridge.issues, "audioBufferLength")}
+              disabled={controlsDisabled || !supports(M61Capability.AudioBufferLength)}
+              onChange={(value) => bridge.setDraftField("audioBufferLength", value)}
+            />
+            {config.audioBufferLength !== DEFAULT_CONFIG.audioBufferLength && (
+              <div className="state-warning">{t("config.warnings.audioBufferTuning")}</div>
+            )}
           </section>
           <section className="config-section">
             <SectionHeading icon={<Gamepad2 size={18} />} title={t("config.sections.input")} description={t("config.sections.inputDescription")} />
+            <div className="stick-deadzone-preview">
+              <StickDeadzonePreview
+                device={bridge.client?.device ?? null}
+                leftDeadzonePercent={config.leftStickDeadzonePercent}
+                rightDeadzonePercent={config.rightStickDeadzonePercent}
+                leftLabel={t("config.stickPreview.left")}
+                rightLabel={t("config.stickPreview.right")}
+                waitingLabel={t("config.stickPreview.waiting")}
+                outputLabel={t("config.stickPreview.output")}
+              />
+            </div>
             <IntegerControl
               label={t("config.leftStickDeadzonePercent")}
               value={config.leftStickDeadzonePercent}
@@ -156,6 +181,16 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               helpContent={t("config.help.statusLedEnabled")}
               disabled={controlsDisabled || !supports(M61Capability.StatusLed)}
               onChange={(value) => bridge.setDraftField("statusLedEnabled", value)}
+            />
+            <IntegerControl
+              label={t("config.statusLedBrightnessPercent")}
+              value={config.statusLedBrightnessPercent}
+              min={1}
+              max={100}
+              helpContent={t("config.help.statusLedBrightnessPercent")}
+              issue={fieldIssue(bridge.issues, "statusLedBrightnessPercent")}
+              disabled={controlsDisabled || !supports(M61Capability.StatusLedBrightness)}
+              onChange={(value) => bridge.setDraftField("statusLedBrightnessPercent", value)}
             />
             <IntegerControl
               label={t("config.idleTimeoutMinutes")}

@@ -1,13 +1,13 @@
 {
   "name": "m61-dualsense-config-web",
   "private": true,
-  "version": "0.8.1",
+  "version": "0.8.2",
   "packageManager": "pnpm@10.7.1",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "test": "node --test --experimental-strip-types src/protocol/m61Management.test.ts src/project.test.ts",
+    "test": "node --test --experimental-strip-types src/protocol/dualsenseInput.test.ts src/protocol/m61Management.test.ts src/project.test.ts",
     "preview": "vite preview --host 127.0.0.1",
     "pwa:test": "pnpm build && vite preview --host 127.0.0.1"
   },

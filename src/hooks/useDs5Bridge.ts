@@ -322,7 +322,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     if (!client || isDirty) {
       return;
     }
-    const riskyPerformance = draft.microphoneEnabled || usesElevatedCpuPerformance(draft);
+    const riskyPerformance = draft.microphoneEnabled ||
+      usesElevatedCpuPerformance(draft) ||
+      draft.audioBufferLength !== DEFAULT_CONFIG.audioBufferLength;
     if (riskyPerformance && !window.confirm(t("actions.savePerformanceConfirm"))) return;
 
     setOperation("saving");

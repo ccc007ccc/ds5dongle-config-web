@@ -8,7 +8,7 @@ import {
   type M61Config,
 } from "./m61Management.ts";
 
-export const CONFIG_BODY_VERSION = 4;
+export const CONFIG_BODY_VERSION = 5;
 export const CONFIG_BODY_SIZE = M61_CONFIG_BODY_SIZE;
 export const FEATURE_REPORT_PAYLOAD_SIZE = M61_FEATURE_PAYLOAD_SIZE;
 export type ConfigBody = M61Config;
@@ -19,6 +19,7 @@ export interface ConfigValidationIssue {
 }
 
 export const DEFAULT_CONFIG: ConfigBody = {
+  schemaVersion: CONFIG_BODY_VERSION,
   capabilities:
     M61Capability.Microphone |
     M61Capability.SpeakerGate |
@@ -32,7 +33,9 @@ export const DEFAULT_CONFIG: ConfigBody = {
     M61Capability.ControllerPowerOff |
     M61Capability.SuspendPowerOff |
     M61Capability.StickDeadzone |
-    M61Capability.UsbPollingRate,
+    M61Capability.UsbPollingRate |
+    M61Capability.StatusLedBrightness |
+    M61Capability.AudioBufferLength,
   microphoneEnabled: false,
   speakerEnabled: true,
   autoReconnectEnabled: true,
@@ -47,6 +50,8 @@ export const DEFAULT_CONFIG: ConfigBody = {
   leftStickDeadzonePercent: 0,
   rightStickDeadzonePercent: 0,
   usbPollingRateMode: 0,
+  statusLedBrightnessPercent: 12,
+  audioBufferLength: 48,
 };
 
 export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): ConfigBody {
@@ -62,7 +67,11 @@ export function hasCapability(config: ConfigBody, capability: number): boolean {
 }
 
 export function releaseDefaultsForDevice(current: ConfigBody): ConfigBody {
-  const defaults = { ...DEFAULT_CONFIG, capabilities: current.capabilities };
+  const defaults = {
+    ...DEFAULT_CONFIG,
+    schemaVersion: current.schemaVersion,
+    capabilities: current.capabilities,
+  };
   const preserveUnlessSupported = <Key extends keyof ConfigBody>(
     capability: number,
     fields: Key[],
@@ -78,12 +87,14 @@ export function releaseDefaultsForDevice(current: ConfigBody): ConfigBody {
   preserveUnlessSupported(M61Capability.SpeakerRoute, ["speakerRoute"]);
   preserveUnlessSupported(M61Capability.AutoReconnect, ["autoReconnectEnabled"]);
   preserveUnlessSupported(M61Capability.StatusLed, ["statusLedEnabled"]);
+  preserveUnlessSupported(M61Capability.StatusLedBrightness, ["statusLedBrightnessPercent"]);
   preserveUnlessSupported(M61Capability.HapticsGain, ["hapticsGainQ8"]);
   preserveUnlessSupported(M61Capability.Dvfs, ["cpuGovernor", "cpuProfile", "manualCpuMhz"]);
   preserveUnlessSupported(M61Capability.IdlePowerOff, ["idleTimeoutMinutes"]);
   preserveUnlessSupported(M61Capability.SuspendPowerOff, ["powerOffOnUsbSuspend"]);
   preserveUnlessSupported(M61Capability.StickDeadzone, ["leftStickDeadzonePercent", "rightStickDeadzonePercent"]);
   preserveUnlessSupported(M61Capability.UsbPollingRate, ["usbPollingRateMode"]);
+  preserveUnlessSupported(M61Capability.AudioBufferLength, ["audioBufferLength"]);
   return defaults;
 }
 
@@ -91,6 +102,9 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   const issues: ConfigValidationIssue[] = [];
   if (!Number.isInteger(config.capabilities) || config.capabilities < 0 || config.capabilities > 0xffff) {
     issues.push({ field: "capabilities" });
+  }
+  if (!Number.isInteger(config.schemaVersion) || config.schemaVersion < 1 || config.schemaVersion > CONFIG_BODY_VERSION) {
+    issues.push({ field: "schemaVersion" });
   }
   if (!Number.isInteger(config.speakerRoute) || config.speakerRoute < 0 || config.speakerRoute > 2) {
     issues.push({ field: "speakerRoute" });
@@ -119,11 +133,18 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.usbPollingRateMode) || config.usbPollingRateMode < 0 || config.usbPollingRateMode > 2) {
     issues.push({ field: "usbPollingRateMode" });
   }
+  if (!Number.isInteger(config.statusLedBrightnessPercent) || config.statusLedBrightnessPercent < 1 || config.statusLedBrightnessPercent > 100) {
+    issues.push({ field: "statusLedBrightnessPercent" });
+  }
+  if (!Number.isInteger(config.audioBufferLength) || config.audioBufferLength < 16 || config.audioBufferLength > 127) {
+    issues.push({ field: "audioBufferLength" });
+  }
   return issues;
 }
 
 export function normalizeConfig(config: ConfigBody): ConfigBody {
   return {
+    schemaVersion: clampInteger(config.schemaVersion, 1, CONFIG_BODY_VERSION),
     capabilities: clampInteger(config.capabilities, 0, 0xffff),
     microphoneEnabled: Boolean(config.microphoneEnabled),
     speakerEnabled: Boolean(config.speakerEnabled),
@@ -139,12 +160,15 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     leftStickDeadzonePercent: clampInteger(config.leftStickDeadzonePercent, 0, 30),
     rightStickDeadzonePercent: clampInteger(config.rightStickDeadzonePercent, 0, 30),
     usbPollingRateMode: clampInteger(config.usbPollingRateMode, 0, 2) as ConfigBody["usbPollingRateMode"],
+    statusLedBrightnessPercent: clampInteger(config.statusLedBrightnessPercent, 1, 100),
+    audioBufferLength: clampInteger(config.audioBufferLength, 16, 127),
   };
 }
 
 export function configsEqual(left: ConfigBody | null, right: ConfigBody | null): boolean {
   if (!left || !right) return left === right;
   return (
+    left.schemaVersion === right.schemaVersion &&
     left.capabilities === right.capabilities &&
     left.microphoneEnabled === right.microphoneEnabled &&
     left.speakerEnabled === right.speakerEnabled &&
@@ -160,6 +184,8 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     && left.leftStickDeadzonePercent === right.leftStickDeadzonePercent
     && left.rightStickDeadzonePercent === right.rightStickDeadzonePercent
     && left.usbPollingRateMode === right.usbPollingRateMode
+    && left.statusLedBrightnessPercent === right.statusLedBrightnessPercent
+    && left.audioBufferLength === right.audioBufferLength
   );
 }
 

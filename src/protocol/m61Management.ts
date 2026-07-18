@@ -3,8 +3,12 @@ export const M61_COMMAND_REPORT_ID = 0xf6;
 export const M61_FIRMWARE_REPORT_ID = 0xf8;
 export const M61_TELEMETRY_REPORT_ID = 0xf9;
 export const M61_FEATURE_PAYLOAD_SIZE = 63;
-export const M61_CONFIG_SCHEMA_VERSION = 4;
-export const M61_CONFIG_BODY_SIZE = 21;
+export const M61_CONFIG_SCHEMA_VERSION = 5;
+export const M61_CONFIG_BODY_SIZE = 23;
+export const M61_STATUS_LED_BRIGHTNESS_DEFAULT = 12;
+export const M61_AUDIO_BUFFER_LENGTH_DEFAULT = 48;
+
+const CONFIG_BODY_SIZES = [0, 16, 18, 20, 21, M61_CONFIG_BODY_SIZE] as const;
 
 const MAGIC = new Uint8Array([0x4d, 0x36, 0x31, 0x43]); // M61C
 
@@ -33,6 +37,8 @@ export const M61Capability = {
   SuspendPowerOff: 1 << 10,
   StickDeadzone: 1 << 11,
   UsbPollingRate: 1 << 12,
+  StatusLedBrightness: 1 << 13,
+  AudioBufferLength: 1 << 14,
 } as const;
 
 export type M61SpeakerRoute = 0 | 1 | 2;
@@ -41,6 +47,7 @@ export type M61CpuProfile = 0 | 1 | 2 | 3;
 export type M61UsbPollingRateMode = 0 | 1 | 2;
 
 export interface M61Config {
+  schemaVersion: number;
   capabilities: number;
   microphoneEnabled: boolean;
   speakerEnabled: boolean;
@@ -56,6 +63,8 @@ export interface M61Config {
   leftStickDeadzonePercent: number;
   rightStickDeadzonePercent: number;
   usbPollingRateMode: M61UsbPollingRateMode;
+  statusLedBrightnessPercent: number;
+  audioBufferLength: number;
 }
 
 export interface M61Telemetry {
@@ -106,11 +115,12 @@ export class M61ProtocolError extends Error {
 
 export function encodeM61Config(config: M61Config): Uint8Array<ArrayBuffer> {
   validateM61Config(config);
-  const bytes = new Uint8Array(new ArrayBuffer(M61_CONFIG_BODY_SIZE));
+  const bodySize = configBodySize(config.schemaVersion);
+  const bytes = new Uint8Array(new ArrayBuffer(bodySize));
   bytes.set(MAGIC, 0);
   const view = new DataView(bytes.buffer);
-  view.setUint8(4, M61_CONFIG_SCHEMA_VERSION);
-  view.setUint8(5, M61_CONFIG_BODY_SIZE);
+  view.setUint8(4, config.schemaVersion);
+  view.setUint8(5, bodySize);
   view.setUint16(6, config.capabilities, true);
   view.setUint8(8, configFlags(config));
   view.setUint8(9, config.speakerRoute);
@@ -118,42 +128,55 @@ export function encodeM61Config(config: M61Config): Uint8Array<ArrayBuffer> {
   view.setUint8(11, config.cpuProfile);
   view.setUint16(12, config.manualCpuMhz, true);
   view.setUint16(14, config.hapticsGainQ8, true);
-  view.setUint8(16, config.idleTimeoutMinutes);
-  view.setUint8(17, config.powerOffOnUsbSuspend ? 0x01 : 0x00);
-  view.setUint8(18, config.leftStickDeadzonePercent);
-  view.setUint8(19, config.rightStickDeadzonePercent);
-  view.setUint8(20, config.usbPollingRateMode);
+  if (config.schemaVersion >= 2) {
+    view.setUint8(16, config.idleTimeoutMinutes);
+    view.setUint8(17, config.powerOffOnUsbSuspend ? 0x01 : 0x00);
+  }
+  if (config.schemaVersion >= 3) {
+    view.setUint8(18, config.leftStickDeadzonePercent);
+    view.setUint8(19, config.rightStickDeadzonePercent);
+  }
+  if (config.schemaVersion >= 4) {
+    view.setUint8(20, config.usbPollingRateMode);
+  }
+  if (config.schemaVersion >= 5) {
+    view.setUint8(21, config.statusLedBrightnessPercent);
+    view.setUint8(22, config.audioBufferLength);
+  }
   return bytes;
 }
 
 export function decodeM61Config(source: ArrayBuffer | DataView | Uint8Array): M61Config {
   const bytes = toUint8Array(source);
   const offset = reportPayloadOffset(bytes, M61_CONFIG_REPORT_ID);
-  if (bytes.byteLength - offset < M61_CONFIG_BODY_SIZE) {
+  if (bytes.byteLength - offset < 6) {
     throw new M61ProtocolError("invalidLength", {
       actual: bytes.byteLength - offset,
-      expected: M61_CONFIG_BODY_SIZE,
+      expected: 6,
     });
   }
   if (!MAGIC.every((value, index) => bytes[offset + index] === value)) {
     throw new M61ProtocolError("invalidMagic");
   }
-  const view = new DataView(bytes.buffer, bytes.byteOffset + offset, M61_CONFIG_BODY_SIZE);
-  const version = view.getUint8(4);
-  if (version !== M61_CONFIG_SCHEMA_VERSION) {
-    throw new M61ProtocolError("versionMismatch", {
-      actual: version,
-      expected: M61_CONFIG_SCHEMA_VERSION,
+  const header = new DataView(bytes.buffer, bytes.byteOffset + offset, bytes.byteLength - offset);
+  const version = header.getUint8(4);
+  const bodySize = configBodySize(version);
+  if (bytes.byteLength - offset < bodySize) {
+    throw new M61ProtocolError("invalidLength", {
+      actual: bytes.byteLength - offset,
+      expected: bodySize,
     });
   }
-  if (view.getUint8(5) !== M61_CONFIG_BODY_SIZE) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset + offset, bodySize);
+  if (view.getUint8(5) !== bodySize) {
     throw new M61ProtocolError("invalidLength", {
       actual: view.getUint8(5),
-      expected: M61_CONFIG_BODY_SIZE,
+      expected: bodySize,
     });
   }
   const flags = view.getUint8(8);
   const config: M61Config = {
+    schemaVersion: version,
     capabilities: view.getUint16(6, true),
     microphoneEnabled: Boolean(flags & 0x01),
     speakerEnabled: Boolean(flags & 0x02),
@@ -164,11 +187,19 @@ export function decodeM61Config(source: ArrayBuffer | DataView | Uint8Array): M6
     cpuProfile: view.getUint8(11) as M61CpuProfile,
     manualCpuMhz: view.getUint16(12, true),
     hapticsGainQ8: view.getUint16(14, true),
-    idleTimeoutMinutes: view.getUint8(16),
-    powerOffOnUsbSuspend: Boolean(view.getUint8(17) & 0x01),
-    leftStickDeadzonePercent: view.getUint8(18),
-    rightStickDeadzonePercent: view.getUint8(19),
-    usbPollingRateMode: (view.getUint8(20) === 3 ? 2 : view.getUint8(20)) as M61UsbPollingRateMode,
+    idleTimeoutMinutes: version >= 2 ? view.getUint8(16) : 0,
+    powerOffOnUsbSuspend: version >= 2 && Boolean(view.getUint8(17) & 0x01),
+    leftStickDeadzonePercent: version >= 3 ? view.getUint8(18) : 0,
+    rightStickDeadzonePercent: version >= 3 ? view.getUint8(19) : 0,
+    usbPollingRateMode: version >= 4
+      ? (view.getUint8(20) === 3 ? 2 : view.getUint8(20)) as M61UsbPollingRateMode
+      : 0,
+    statusLedBrightnessPercent: version >= 5
+      ? view.getUint8(21)
+      : M61_STATUS_LED_BRIGHTNESS_DEFAULT,
+    audioBufferLength: version >= 5
+      ? view.getUint8(22)
+      : M61_AUDIO_BUFFER_LENGTH_DEFAULT,
   };
   validateM61Config(config);
   return config;
@@ -235,6 +266,9 @@ function readUint32(view: DataView, available: number, offset: number, required:
 
 export function validateM61Config(config: M61Config): void {
   const valid =
+    Number.isInteger(config.schemaVersion) &&
+    config.schemaVersion >= 1 &&
+    config.schemaVersion <= M61_CONFIG_SCHEMA_VERSION &&
     Number.isInteger(config.capabilities) &&
     config.capabilities >= 0 &&
     config.capabilities <= 0xffff &&
@@ -264,12 +298,28 @@ export function validateM61Config(config: M61Config): void {
     config.leftStickDeadzonePercent <= 30 &&
     Number.isInteger(config.rightStickDeadzonePercent) &&
     config.rightStickDeadzonePercent >= 0 &&
-    config.rightStickDeadzonePercent <= 30;
+    config.rightStickDeadzonePercent <= 30 &&
+    Number.isInteger(config.statusLedBrightnessPercent) &&
+    config.statusLedBrightnessPercent >= 1 &&
+    config.statusLedBrightnessPercent <= 100 &&
+    Number.isInteger(config.audioBufferLength) &&
+    config.audioBufferLength >= 16 &&
+    config.audioBufferLength <= 127;
   const validPollingRate = Number.isInteger(config.usbPollingRateMode) &&
     config.usbPollingRateMode >= 0 && config.usbPollingRateMode <= 2;
   if (!valid || !validPollingRate) {
     throw new M61ProtocolError("invalidConfig");
   }
+}
+
+function configBodySize(version: number): number {
+  if (!Number.isInteger(version) || version < 1 || version > M61_CONFIG_SCHEMA_VERSION) {
+    throw new M61ProtocolError("versionMismatch", {
+      actual: version,
+      expected: M61_CONFIG_SCHEMA_VERSION,
+    });
+  }
+  return CONFIG_BODY_SIZES[version] ?? M61_CONFIG_BODY_SIZE;
 }
 
 function configFlags(config: M61Config): number {

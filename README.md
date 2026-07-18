@@ -36,11 +36,15 @@ they do not increase the Bluetooth controller's native sample rate.
 The supported controller target is the standard DualSense. DualSense Edge is
 not supported or hardware-qualified.
 
-Current controls include audio routing and haptics gain, safe CPU profiles,
-manual stick deadzones, 250/500 Hz USB report modes, controller inactivity and
+Current controls include audio routing, the controller audio-buffer hint,
+haptics gain, hardware-PWM status-LED brightness, safe CPU profiles, manual
+stick deadzones, 250/500 Hz USB report modes, controller inactivity and
 host-suspend power policies, pairing/disconnect/forget/power-off actions,
-Flash persistence, and bounded diagnostics export. Browser firmware flashing
-is not provided; use the firmware repository's UART ISP instructions.
+Flash persistence, and bounded diagnostics export. The deadzone panel draws
+live stick positions directly from the existing USB HID input stream and
+coalesces 250/500 Hz events to at most one canvas update per display frame; it
+does not poll Feature reports or add firmware traffic. Browser firmware
+flashing is not provided; use the firmware repository's UART ISP instructions.
 
 ## Local development and validation
 
