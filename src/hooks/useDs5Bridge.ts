@@ -125,6 +125,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     setOperation("reading");
     try {
       const nextConfig = normalizeConfig(await nextClient.readConfig());
+      if (clientRef.current !== nextClient) {
+        return;
+      }
       configRef.current = nextConfig;
       draftRef.current = nextConfig;
       if (syncUsbEffectiveConfig) {
@@ -136,7 +139,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setSaveState("idle");
       setError(null);
     } finally {
-      setOperation(null);
+      if (clientRef.current === nextClient) {
+        setOperation(null);
+      }
     }
   }, []);
 
@@ -189,10 +194,15 @@ export function useDs5Bridge(): UseDs5BridgeResult {
 
         try {
           setOperation("readingFirmware");
-          setFirmwareVersion(await nextClient.readFirmwareVersion());
+          const nextFirmwareVersion = await nextClient.readFirmwareVersion();
+          if (clientRef.current === nextClient) {
+            setFirmwareVersion(nextFirmwareVersion);
+          }
         } catch (cause) {
-          setFirmwareVersion(null);
-          setError(errorMessage(cause, t));
+          if (clientRef.current === nextClient) {
+            setFirmwareVersion(null);
+            setError(errorMessage(cause, t));
+          }
         }
       } catch (cause) {
         if (!previousClient || previousClient.device !== nextClient.device) {
@@ -241,8 +251,10 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     try {
       await readConfigWithClient(client);
     } catch (cause) {
-      setError(errorMessage(cause, t));
-      setOperation(null);
+      if (clientRef.current === client) {
+        setError(errorMessage(cause, t));
+        setOperation(null);
+      }
     }
   }, [client, readConfigWithClient, t]);
 
@@ -252,6 +264,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       return false;
     }
 
+    const operationClient = clientRef.current;
     applyingRef.current = true;
     setOperation("applying");
     try {
@@ -269,6 +282,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         }
 
         await nextClient.applyConfig(nextDraft);
+        if (clientRef.current !== nextClient) {
+          break;
+        }
         configRef.current = nextDraft;
         setConfig(nextDraft);
         setNeedsUsbReconnect(
@@ -287,11 +303,15 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         }
       }
     } catch (cause) {
-      setError(errorMessage(cause, t));
+      if (clientRef.current === operationClient) {
+        setError(errorMessage(cause, t));
+      }
       return false;
     } finally {
       applyingRef.current = false;
-      setOperation(null);
+      if (clientRef.current === operationClient) {
+        setOperation(null);
+      }
     }
 
     return true;
@@ -307,12 +327,18 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     setOperation("saving");
     try {
       await client.saveToFlash();
-      setSaveState("saved");
-      setError(null);
+      if (clientRef.current === client) {
+        setSaveState("saved");
+        setError(null);
+      }
     } catch (cause) {
-      setError(errorMessage(cause, t));
+      if (clientRef.current === client) {
+        setError(errorMessage(cause, t));
+      }
     } finally {
-      setOperation(null);
+      if (clientRef.current === client) {
+        setOperation(null);
+      }
     }
   }, [client, draft, isDirty, t]);
 
@@ -351,7 +377,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     } catch (cause) {
       setError(errorMessage(cause, t));
     } finally {
-      setOperation(null);
+      if (clientRef.current === client) {
+        setOperation(null);
+      }
     }
   }, [client, t]);
 
@@ -368,7 +396,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     } catch (cause) {
       setError(errorMessage(cause, t));
     } finally {
-      setOperation(null);
+      if (clientRef.current === client) {
+        setOperation(null);
+      }
     }
   }, [client, readSignalStrengthWithClient, t]);
 
@@ -418,12 +448,18 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     setOperation("saving");
     try {
       await nextClient.saveToFlash();
-      setSaveState("saved");
-      setError(null);
+      if (clientRef.current === nextClient) {
+        setSaveState("saved");
+        setError(null);
+      }
     } catch (cause) {
-      setError(errorMessage(cause, t));
+      if (clientRef.current === nextClient) {
+        setError(errorMessage(cause, t));
+      }
     } finally {
-      setOperation(null);
+      if (clientRef.current === nextClient) {
+        setOperation(null);
+      }
     }
   }, [applyLatestDraft, t]);
 
@@ -469,6 +505,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
           setOperation("reconnecting");
           setError(null);
         } else {
+          setOperation(null);
           setError(t("errors.disconnected"));
         }
       }
