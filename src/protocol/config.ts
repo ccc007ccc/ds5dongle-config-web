@@ -8,7 +8,7 @@ import {
   type M61Config,
 } from "./m61Management";
 
-export const CONFIG_BODY_VERSION = 3;
+export const CONFIG_BODY_VERSION = 4;
 export const CONFIG_BODY_SIZE = M61_CONFIG_BODY_SIZE;
 export const FEATURE_REPORT_PAYLOAD_SIZE = M61_FEATURE_PAYLOAD_SIZE;
 export type ConfigBody = M61Config;
@@ -31,7 +31,8 @@ export const DEFAULT_CONFIG: ConfigBody = {
     M61Capability.IdlePowerOff |
     M61Capability.ControllerPowerOff |
     M61Capability.SuspendPowerOff |
-    M61Capability.StickDeadzone,
+    M61Capability.StickDeadzone |
+    M61Capability.UsbPollingRate,
   microphoneEnabled: false,
   speakerEnabled: true,
   autoReconnectEnabled: true,
@@ -45,6 +46,7 @@ export const DEFAULT_CONFIG: ConfigBody = {
   powerOffOnUsbSuspend: false,
   leftStickDeadzonePercent: 0,
   rightStickDeadzonePercent: 0,
+  usbPollingRateMode: 0,
 };
 
 export function decodeConfigBody(source: ArrayBuffer | DataView | Uint8Array): ConfigBody {
@@ -88,6 +90,9 @@ export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {
   if (!Number.isInteger(config.rightStickDeadzonePercent) || config.rightStickDeadzonePercent < 0 || config.rightStickDeadzonePercent > 30) {
     issues.push({ field: "rightStickDeadzonePercent" });
   }
+  if (!Number.isInteger(config.usbPollingRateMode) || config.usbPollingRateMode < 0 || config.usbPollingRateMode > 2) {
+    issues.push({ field: "usbPollingRateMode" });
+  }
   return issues;
 }
 
@@ -107,6 +112,7 @@ export function normalizeConfig(config: ConfigBody): ConfigBody {
     powerOffOnUsbSuspend: Boolean(config.powerOffOnUsbSuspend),
     leftStickDeadzonePercent: clampInteger(config.leftStickDeadzonePercent, 0, 30),
     rightStickDeadzonePercent: clampInteger(config.rightStickDeadzonePercent, 0, 30),
+    usbPollingRateMode: clampInteger(config.usbPollingRateMode, 0, 2) as ConfigBody["usbPollingRateMode"],
   };
 }
 
@@ -127,6 +133,7 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
     && left.powerOffOnUsbSuspend === right.powerOffOnUsbSuspend
     && left.leftStickDeadzonePercent === right.leftStickDeadzonePercent
     && left.rightStickDeadzonePercent === right.rightStickDeadzonePercent
+    && left.usbPollingRateMode === right.usbPollingRateMode
   );
 }
 

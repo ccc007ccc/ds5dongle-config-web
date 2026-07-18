@@ -5,6 +5,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS ? "/ds5dongle-config-web/" : "/",
   plugins: [
     react(),
     tailwindcss(),

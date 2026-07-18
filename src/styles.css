@@ -783,6 +783,13 @@ h2 {
   line-height: 1.35;
 }
 
+.control-help-text {
+  margin-top: -2px;
+  color: var(--muted-foreground);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
 @media (max-width: 860px) {
   .app-shell {
     width: min(100% - 20px, 680px);

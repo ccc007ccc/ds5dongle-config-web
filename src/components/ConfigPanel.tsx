@@ -85,6 +85,20 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               disabled={disconnected || !supports(M61Capability.StickDeadzone)}
               onChange={(value) => bridge.setDraftField("rightStickDeadzonePercent", value)}
             />
+            <SelectControl
+              label={t("config.usbPollingRateMode")}
+              value={config.usbPollingRateMode}
+              disabled={disconnected || !supports(M61Capability.UsbPollingRate)}
+              options={[
+                [0, t("config.usbPollingRates.realtime")],
+                [1, t("config.usbPollingRates.hz250")],
+                [2, t("config.usbPollingRates.hz500")],
+              ]}
+              onChange={(value) => bridge.setDraftField("usbPollingRateMode", value as 0 | 1 | 2)}
+            />
+            <div className="control-help-text">
+              {t(`config.help.usbPollingRates.${["realtime", "hz250", "hz500"][config.usbPollingRateMode]}`)}
+            </div>
           </section>
         </div>
 

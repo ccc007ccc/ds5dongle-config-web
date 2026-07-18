@@ -24,13 +24,13 @@ little-endian. Unknown magic, versions, lengths, commands, or ranges are
 rejected before state changes. Reports `0xF6` through `0xF9` are handled by the
 M61 itself; every other DualSense Feature Report keeps the controller proxy.
 
-## Configuration v3
+## Configuration v4
 
 The schema contains microphone enable, speaker enable, speaker route,
 automatic reconnect, M61 status LED enable, Q8 haptics gain, CPU governor,
 CPU profile, safe manual frequency, 0–60 minute controller inactivity timeout,
-host-suspend controller power policy, and independent left/right 0–30% scaled
-radial stick deadzones. The UI enables a control only when its capability bit
+host-suspend controller power policy, independent left/right 0–30% scaled
+radial stick deadzones, and a persistent USB report-rate mode. The UI enables a control only when its capability bit
 is present. Frequencies above the validated 400 MHz limit are
 never writable through the normal Web application.
 
@@ -76,7 +76,10 @@ allocation-free, nonblocking, and safe in the USB control path.
    Bluetooth Feature Report `0x08`, then observes the normal link teardown.
 6. Input correction: independent scaled radial deadzones preserve direction
    and full stick travel; `0%` is a bit-exact bypass.
-7. Hardware release: full-load audio, RAM/ITCM, reconnect, power-cycle, and
+7. USB reporting: realtime mode forwards only fresh Bluetooth samples. Validated
+   fixed 250/500 Hz modes repeat the latest sample at the selected USB interval.
+   The experimental 1000 Hz option is not exposed on current hardware.
+8. Hardware release: full-load audio, RAM/ITCM, reconnect, power-cycle, and
    Chromium WebHID acceptance.
 
 ## Performance and safety gates

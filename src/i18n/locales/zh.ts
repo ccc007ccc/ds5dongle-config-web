@@ -37,10 +37,11 @@ export const zh = {
     hapticsGainQ8: "触觉增益（Q8）", cpuGovernor: "CPU governor", cpuProfile: "CPU 档位",
     manualCpuMhz: "自定义 CPU 频率（MHz）", autoReconnectEnabled: "自动重连手柄", statusLedEnabled: "启用 M61 状态灯",
     idleTimeoutMinutes: "无操作自动关机（分钟）", powerOffOnUsbSuspend: "主机挂起后关闭手柄",
-    leftStickDeadzonePercent: "左摇杆死区（%）", rightStickDeadzonePercent: "右摇杆死区（%）",
+    leftStickDeadzonePercent: "左摇杆死区（%）", rightStickDeadzonePercent: "右摇杆死区（%）", usbPollingRateMode: "USB 回报率",
     speakerRoutes: { auto: "自动", mono: "单声道", stereo: "双声道" },
     cpuGovernors: { manual: "固定频率", realtime: "实时负载调频" },
     cpuProfiles: { eco: "节能 · 320 MHz", balanced: "均衡 · 384 MHz", performance: "性能 · 400 MHz", custom: "自定义 · 320–400 MHz" },
+    usbPollingRates: { realtime: "实时跟随蓝牙（推荐）", hz250: "固定 250 Hz", hz500: "固定 500 Hz" },
     help: {
       open: "查看说明", close: "关闭说明",
       microphoneEnabled: "发布默认关闭。关闭时 USB 麦克风接口仍存在，但只返回静音数据。",
@@ -52,6 +53,11 @@ export const zh = {
       idleTimeoutMinutes: "0 表示关闭；1–60 分钟内没有有效操作时关闭 DualSense。待机判断固定忽略摇杆中心 25% 范围，避免漂移阻止关机；不会修改游戏摇杆输出。",
       powerOffOnUsbSuspend: "USB 持续挂起 3 秒后关闭 DualSense；短暂 USB 重枚举不会触发。",
       stickDeadzone: "0 表示关闭修正。中心使用径向死区，死区外重新映射，保留方向和完整摇杆行程。",
+      usbPollingRates: {
+        realtime: "只在 M61 收到手柄的新蓝牙报告时向电脑回报，不人为重复数据。实际频率由手柄和无线链路决定；当前普通 DualSense 实测约 500 Hz，推荐优先使用。修改后需重连 USB。",
+        hz250: "电脑端按约 250 Hz（每 4 ms）接收 USB 报告。若期间没有新的蓝牙数据，固件会重复最近一份手柄样本；这不是把手柄采样率限制或提升到 250 Hz。修改后需重连 USB。",
+        hz500: "电脑端按约 500 Hz（每 2 ms）接收 USB 报告。当前普通 DualSense 蓝牙新报告实测约 500 Hz，但会随手柄和无线链路波动；缺少新数据时会重复最近样本。修改后需重连 USB。",
+      },
     },
     warnings: {
       microphoneLoad: "麦克风会显著增加 M61 实时 Opus 编解码负载，当前链路或频率余量不足时可能造成音频和输入卡顿。发布默认保持关闭。",
@@ -82,7 +88,7 @@ export const zh = {
     capabilities: "M61 能力位无效", speakerRoute: "扬声器路由无效", cpuGovernor: "CPU governor 无效",
     cpuProfile: "CPU 档位无效", manualCpuMhz: "CPU 频率必须在 320–400 MHz", hapticsGainQ8: "触觉 Q8 增益必须在 256–512",
     idleTimeoutMinutes: "无操作自动关机必须在 0–60 分钟",
-    leftStickDeadzonePercent: "左摇杆死区必须在 0%–30%", rightStickDeadzonePercent: "右摇杆死区必须在 0%–30%",
+    leftStickDeadzonePercent: "左摇杆死区必须在 0%–30%", rightStickDeadzonePercent: "右摇杆死区必须在 0%–30%", usbPollingRateMode: "USB 回报率模式无效",
   },
   errors: {
     invalidConfig: "M61 返回了无效配置：{{issues}}", invalidBytes: "选择的 HID 设备没有返回 M61 管理报告。",

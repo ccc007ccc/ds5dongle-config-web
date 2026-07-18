@@ -35,6 +35,7 @@ const config: M61Config = {
   powerOffOnUsbSuspend: true,
   leftStickDeadzonePercent: 8,
   rightStickDeadzonePercent: 12,
+  usbPollingRateMode: 2,
 };
 
 test("M61 config round trips with and without report ID", () => {
@@ -44,6 +45,12 @@ test("M61 config round trips with and without report ID", () => {
   withId[0] = M61_CONFIG_REPORT_ID;
   withId.set(encoded, 1);
   assert.deepEqual(decodeM61Config(withId), config);
+});
+
+test("retired schema-v4 polling value migrates to fixed 500 Hz", () => {
+  const encoded = encodeM61Config(config);
+  encoded[20] = 3;
+  assert.equal(decodeM61Config(encoded).usbPollingRateMode, 2);
 });
 
 test("an unrelated legacy config is rejected by magic", () => {

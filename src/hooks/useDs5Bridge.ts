@@ -80,6 +80,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const draftRef = useRef<ConfigBody>(DEFAULT_CONFIG);
   const applyingRef = useRef(false);
   const applyQueuedRef = useRef(false);
+  const usbEffectivePollingRateRef = useRef(DEFAULT_CONFIG.usbPollingRateMode);
   const usbReconnectPendingRef = useRef(false);
   const usbReconnectTimeoutRef = useRef<number | null>(null);
 
@@ -127,6 +128,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       configRef.current = nextConfig;
       draftRef.current = nextConfig;
       if (syncUsbEffectiveConfig) {
+        usbEffectivePollingRateRef.current = nextConfig.usbPollingRateMode;
         setNeedsUsbReconnect(false);
       }
       setConfig(nextConfig);
@@ -252,7 +254,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         await nextClient.applyConfig(nextDraft);
         configRef.current = nextDraft;
         setConfig(nextDraft);
-        setNeedsUsbReconnect(false);
+        setNeedsUsbReconnect(
+          nextDraft.usbPollingRateMode !== usbEffectivePollingRateRef.current,
+        );
         setSaveState("applied");
         setError(null);
 
@@ -432,6 +436,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         clientRef.current = null;
         configRef.current = null;
         draftRef.current = DEFAULT_CONFIG;
+        usbEffectivePollingRateRef.current = DEFAULT_CONFIG.usbPollingRateMode;
         setClient(null);
         setFirmwareVersion(null);
         setSignalStrengthRssi(null);

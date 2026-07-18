@@ -3,8 +3,8 @@ export const M61_COMMAND_REPORT_ID = 0xf6;
 export const M61_FIRMWARE_REPORT_ID = 0xf8;
 export const M61_TELEMETRY_REPORT_ID = 0xf9;
 export const M61_FEATURE_PAYLOAD_SIZE = 63;
-export const M61_CONFIG_SCHEMA_VERSION = 3;
-export const M61_CONFIG_BODY_SIZE = 20;
+export const M61_CONFIG_SCHEMA_VERSION = 4;
+export const M61_CONFIG_BODY_SIZE = 21;
 
 const MAGIC = new Uint8Array([0x4d, 0x36, 0x31, 0x43]); // M61C
 
@@ -32,11 +32,13 @@ export const M61Capability = {
   ControllerPowerOff: 1 << 9,
   SuspendPowerOff: 1 << 10,
   StickDeadzone: 1 << 11,
+  UsbPollingRate: 1 << 12,
 } as const;
 
 export type M61SpeakerRoute = 0 | 1 | 2;
 export type M61CpuGovernor = 0 | 1;
 export type M61CpuProfile = 0 | 1 | 2 | 3;
+export type M61UsbPollingRateMode = 0 | 1 | 2;
 
 export interface M61Config {
   capabilities: number;
@@ -53,6 +55,7 @@ export interface M61Config {
   powerOffOnUsbSuspend: boolean;
   leftStickDeadzonePercent: number;
   rightStickDeadzonePercent: number;
+  usbPollingRateMode: M61UsbPollingRateMode;
 }
 
 export interface M61Telemetry {
@@ -119,6 +122,7 @@ export function encodeM61Config(config: M61Config): Uint8Array<ArrayBuffer> {
   view.setUint8(17, config.powerOffOnUsbSuspend ? 0x01 : 0x00);
   view.setUint8(18, config.leftStickDeadzonePercent);
   view.setUint8(19, config.rightStickDeadzonePercent);
+  view.setUint8(20, config.usbPollingRateMode);
   return bytes;
 }
 
@@ -164,6 +168,7 @@ export function decodeM61Config(source: ArrayBuffer | DataView | Uint8Array): M6
     powerOffOnUsbSuspend: Boolean(view.getUint8(17) & 0x01),
     leftStickDeadzonePercent: view.getUint8(18),
     rightStickDeadzonePercent: view.getUint8(19),
+    usbPollingRateMode: Math.min(view.getUint8(20), 2) as M61UsbPollingRateMode,
   };
   validateM61Config(config);
   return config;
@@ -260,7 +265,9 @@ export function validateM61Config(config: M61Config): void {
     Number.isInteger(config.rightStickDeadzonePercent) &&
     config.rightStickDeadzonePercent >= 0 &&
     config.rightStickDeadzonePercent <= 30;
-  if (!valid) {
+  const validPollingRate = Number.isInteger(config.usbPollingRateMode) &&
+    config.usbPollingRateMode >= 0 && config.usbPollingRateMode <= 2;
+  if (!valid || !validPollingRate) {
     throw new M61ProtocolError("invalidConfig");
   }
 }

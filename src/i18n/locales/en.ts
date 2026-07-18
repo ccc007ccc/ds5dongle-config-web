@@ -42,10 +42,11 @@ export const en = {
     manualCpuMhz: "Custom CPU frequency (MHz)", autoReconnectEnabled: "Automatic controller reconnect",
     statusLedEnabled: "M61 status LED enabled", idleTimeoutMinutes: "Power off after inactivity (minutes)",
     powerOffOnUsbSuspend: "Power off controller after host suspend",
-    leftStickDeadzonePercent: "Left stick deadzone (%)", rightStickDeadzonePercent: "Right stick deadzone (%)",
+    leftStickDeadzonePercent: "Left stick deadzone (%)", rightStickDeadzonePercent: "Right stick deadzone (%)", usbPollingRateMode: "USB report rate",
     speakerRoutes: { auto: "Automatic", mono: "Mono", stereo: "Stereo" },
     cpuGovernors: { manual: "Manual lock", realtime: "Realtime workload governor" },
     cpuProfiles: { eco: "Eco · 320 MHz", balanced: "Balanced · 384 MHz", performance: "Performance · 400 MHz", custom: "Custom · 320–400 MHz" },
+    usbPollingRates: { realtime: "Realtime Bluetooth (recommended)", hz250: "Fixed 250 Hz", hz500: "Fixed 500 Hz" },
     help: {
       open: "View help", close: "Close help",
       microphoneEnabled: "Disabled by release default. The USB microphone remains present and serves silence while disabled.",
@@ -57,6 +58,11 @@ export const en = {
       idleTimeoutMinutes: "0 disables the policy. The idle detector ignores the fixed inner 25% of stick travel so drift cannot keep the controller awake; game input is not modified.",
       powerOffOnUsbSuspend: "Power off the DualSense after USB remains suspended for 3 seconds. Brief USB re-enumeration is ignored.",
       stickDeadzone: "0 disables correction. The radial deadzone is remapped outside its center, preserving direction and full stick travel.",
+      usbPollingRates: {
+        realtime: "Reports to the PC only when M61 receives a fresh Bluetooth report, without artificial repeats. The actual rate depends on the controller and radio link; a standard DualSense currently measures about 500 Hz. Recommended. Requires USB reconnect.",
+        hz250: "The PC receives USB reports at about 250 Hz (every 4 ms). If no fresh Bluetooth data arrives in that interval, firmware repeats the latest controller sample; this neither limits nor raises the controller sampling rate to 250 Hz. Requires USB reconnect.",
+        hz500: "The PC receives USB reports at about 500 Hz (every 2 ms). Fresh Bluetooth reports from a standard DualSense currently measure about 500 Hz but vary with the controller and radio link; the latest sample is repeated when necessary. Requires USB reconnect.",
+      },
     },
     warnings: {
       microphoneLoad: "Microphone streaming adds substantial realtime Opus encode/decode load. With insufficient clock or link margin it may cause audio and input stutter. The release default is off.",
@@ -89,7 +95,7 @@ export const en = {
     capabilities: "Invalid M61 capability mask", speakerRoute: "Speaker route is invalid", cpuGovernor: "CPU governor is invalid",
     cpuProfile: "CPU profile is invalid", manualCpuMhz: "CPU frequency must be between 320 and 400 MHz",
     hapticsGainQ8: "Haptics Q8 gain must be between 256 and 512", idleTimeoutMinutes: "Inactivity power-off must be between 0 and 60 minutes",
-    leftStickDeadzonePercent: "Left stick deadzone must be between 0% and 30%", rightStickDeadzonePercent: "Right stick deadzone must be between 0% and 30%",
+    leftStickDeadzonePercent: "Left stick deadzone must be between 0% and 30%", rightStickDeadzonePercent: "Right stick deadzone must be between 0% and 30%", usbPollingRateMode: "USB report-rate mode is invalid",
   },
   errors: {
     invalidConfig: "M61 returned invalid configuration: {{issues}}", invalidBytes: "The selected HID device did not return an M61 management report.",
