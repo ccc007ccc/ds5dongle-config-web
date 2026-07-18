@@ -53,6 +53,14 @@ test("retired schema-v4 polling value migrates to fixed 500 Hz", () => {
   assert.equal(decodeM61Config(encoded).usbPollingRateMode, 2);
 });
 
+test("unknown polling values are rejected instead of silently clamped", () => {
+  const encoded = encodeM61Config(config);
+  encoded[20] = 4;
+  assert.throws(() => decodeM61Config(encoded), (error: unknown) => {
+    return error instanceof M61ProtocolError && error.code === "invalidConfig";
+  });
+});
+
 test("an unrelated legacy config is rejected by magic", () => {
   const legacy = new Uint8Array(M61_CONFIG_BODY_SIZE);
   legacy[0] = 5;

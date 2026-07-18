@@ -168,7 +168,7 @@ export function decodeM61Config(source: ArrayBuffer | DataView | Uint8Array): M6
     powerOffOnUsbSuspend: Boolean(view.getUint8(17) & 0x01),
     leftStickDeadzonePercent: view.getUint8(18),
     rightStickDeadzonePercent: view.getUint8(19),
-    usbPollingRateMode: Math.min(view.getUint8(20), 2) as M61UsbPollingRateMode,
+    usbPollingRateMode: (view.getUint8(20) === 3 ? 2 : view.getUint8(20)) as M61UsbPollingRateMode,
   };
   validateM61Config(config);
   return config;
