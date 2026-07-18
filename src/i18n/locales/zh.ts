@@ -21,7 +21,7 @@ export const zh = {
   },
   device: {
     label: "M61 设备", firmwareVersion: "固件", firmwareUnknown: "未知", signalStrength: "手柄 RSSI", signalStrengthUnknown: "不可用",
-    signalStrengthTitle: "固件支持时显示已连接手柄的蓝牙信号强度。", audioSpeaker: "扬声器", audioMicrophone: "麦克风",
+    signalStrengthTitle: "M61当前刻意不读取RSSI：硬件测试中，BL616在活跃BR/EDR链路上查询RSSI会干扰手柄输入。", audioSpeaker: "扬声器", audioMicrophone: "麦克风",
     audioActive: "活跃", audioInactive: "未活跃", open: "打开", openTitle: "打开第一个已授权 M61 设备",
     connect: "连接", connectTitle: "选择 M61 DualSense HID 接口",
   },

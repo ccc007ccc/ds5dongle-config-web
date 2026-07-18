@@ -24,7 +24,7 @@ export const en = {
   },
   device: {
     label: "M61 device", firmwareVersion: "Firmware", firmwareUnknown: "Unknown", signalStrength: "Controller RSSI",
-    signalStrengthUnknown: "Unavailable", signalStrengthTitle: "Connected-controller Bluetooth signal strength when firmware support is available.",
+    signalStrengthUnknown: "Unavailable", signalStrengthTitle: "M61 intentionally leaves RSSI unavailable: active BL616 BR/EDR RSSI queries disturbed controller input during hardware testing.",
     audioSpeaker: "Speaker", audioMicrophone: "Microphone", audioActive: "active", audioInactive: "inactive",
     open: "Open", openTitle: "Open the first previously authorized M61 device", connect: "Connect",
     connectTitle: "Choose the M61 DualSense HID interface",
