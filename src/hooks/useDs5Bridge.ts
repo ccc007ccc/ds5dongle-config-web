@@ -7,6 +7,7 @@ import {
   ConfigValidationIssue,
   configsEqual,
   normalizeConfig,
+  releaseDefaultsForDevice,
   validateConfig,
 } from "../protocol/config";
 import {
@@ -85,9 +86,13 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const usbReconnectTimeoutRef = useRef<number | null>(null);
 
   const issues = useMemo(() => validateConfig(draft), [draft]);
+  const deviceDefaults = useMemo(
+    () => config ? releaseDefaultsForDevice(config) : DEFAULT_CONFIG,
+    [config],
+  );
   const isConnected = Boolean(client?.device.opened);
   const isDirty = !configsEqual(config, draft);
-  const isDefaultConfig = configsEqual(draft, DEFAULT_CONFIG);
+  const isDefaultConfig = configsEqual(draft, deviceDefaults);
   const deviceLabel = getDeviceLabel(client?.device ?? null);
 
   const statusText = useMemo(() => {
@@ -420,6 +425,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       if (!clientRef.current?.device.opened) {
         return;
       }
+      if (operation !== null && operation !== "applying") {
+        return;
+      }
 
       const nextDraft = { ...draftRef.current, [field]: value };
       draftRef.current = nextDraft;
@@ -427,21 +435,23 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setSaveState("dirty");
       void applyLatestDraft();
     },
-    [applyLatestDraft],
+    [applyLatestDraft, operation],
   );
 
   const resetToDefaults = useCallback(async () => {
     const nextClient = clientRef.current;
-    if (!nextClient) {
+    const currentConfig = configRef.current;
+    if (!nextClient || !currentConfig) {
       return;
     }
 
-    draftRef.current = DEFAULT_CONFIG;
-    setDraft(DEFAULT_CONFIG);
+    const nextDefaults = releaseDefaultsForDevice(currentConfig);
+    draftRef.current = nextDefaults;
+    setDraft(nextDefaults);
     setSaveState("dirty");
 
     const applied = await applyLatestDraft();
-    if (!applied || !configsEqual(configRef.current, DEFAULT_CONFIG)) {
+    if (!applied || !configsEqual(configRef.current, nextDefaults)) {
       return;
     }
 

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { en } from "../i18n/locales/en.ts";
 import { zh } from "../i18n/locales/zh.ts";
+import { DEFAULT_CONFIG, releaseDefaultsForDevice } from "./config.ts";
 import {
   M61Capability,
   M61Command,
@@ -59,6 +60,27 @@ test("unknown polling values are rejected instead of silently clamped", () => {
   assert.throws(() => decodeM61Config(encoded), (error: unknown) => {
     return error instanceof M61ProtocolError && error.code === "invalidConfig";
   });
+});
+
+test("release defaults preserve fields hidden by device capabilities", () => {
+  const current: M61Config = {
+    ...config,
+    capabilities: M61Capability.Microphone,
+    microphoneEnabled: true,
+    speakerEnabled: false,
+    cpuGovernor: 1,
+    cpuProfile: 2,
+    manualCpuMhz: 400,
+    usbPollingRateMode: 2,
+  };
+  const defaults = releaseDefaultsForDevice(current);
+  assert.equal(defaults.capabilities, M61Capability.Microphone);
+  assert.equal(defaults.microphoneEnabled, DEFAULT_CONFIG.microphoneEnabled);
+  assert.equal(defaults.speakerEnabled, current.speakerEnabled);
+  assert.equal(defaults.cpuGovernor, current.cpuGovernor);
+  assert.equal(defaults.cpuProfile, current.cpuProfile);
+  assert.equal(defaults.manualCpuMhz, current.manualCpuMhz);
+  assert.equal(defaults.usbPollingRateMode, current.usbPollingRateMode);
 });
 
 test("an unrelated legacy config is rejected by magic", () => {

@@ -6,7 +6,7 @@ import {
   encodeM61Config,
   M61ProtocolError,
   type M61Config,
-} from "./m61Management";
+} from "./m61Management.ts";
 
 export const CONFIG_BODY_VERSION = 4;
 export const CONFIG_BODY_SIZE = M61_CONFIG_BODY_SIZE;
@@ -59,6 +59,32 @@ export function encodeConfigBody(config: ConfigBody): Uint8Array<ArrayBuffer> {
 
 export function hasCapability(config: ConfigBody, capability: number): boolean {
   return (config.capabilities & capability) === capability;
+}
+
+export function releaseDefaultsForDevice(current: ConfigBody): ConfigBody {
+  const defaults = { ...DEFAULT_CONFIG, capabilities: current.capabilities };
+  const preserveUnlessSupported = <Key extends keyof ConfigBody>(
+    capability: number,
+    fields: Key[],
+  ) => {
+    if (hasCapability(current, capability)) return;
+    for (const field of fields) {
+      defaults[field] = current[field] as ConfigBody[Key];
+    }
+  };
+
+  preserveUnlessSupported(M61Capability.Microphone, ["microphoneEnabled"]);
+  preserveUnlessSupported(M61Capability.SpeakerGate, ["speakerEnabled"]);
+  preserveUnlessSupported(M61Capability.SpeakerRoute, ["speakerRoute"]);
+  preserveUnlessSupported(M61Capability.AutoReconnect, ["autoReconnectEnabled"]);
+  preserveUnlessSupported(M61Capability.StatusLed, ["statusLedEnabled"]);
+  preserveUnlessSupported(M61Capability.HapticsGain, ["hapticsGainQ8"]);
+  preserveUnlessSupported(M61Capability.Dvfs, ["cpuGovernor", "cpuProfile", "manualCpuMhz"]);
+  preserveUnlessSupported(M61Capability.IdlePowerOff, ["idleTimeoutMinutes"]);
+  preserveUnlessSupported(M61Capability.SuspendPowerOff, ["powerOffOnUsbSuspend"]);
+  preserveUnlessSupported(M61Capability.StickDeadzone, ["leftStickDeadzonePercent", "rightStickDeadzonePercent"]);
+  preserveUnlessSupported(M61Capability.UsbPollingRate, ["usbPollingRateMode"]);
+  return defaults;
 }
 
 export function validateConfig(config: ConfigBody): ConfigValidationIssue[] {

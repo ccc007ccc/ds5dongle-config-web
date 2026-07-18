@@ -12,6 +12,8 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
   const { t } = useTranslation();
   const config = bridge.draft;
   const disconnected = !bridge.isConnected;
+  const managementBusy = bridge.operation !== null && bridge.operation !== "applying";
+  const controlsDisabled = disconnected || managementBusy;
   const supports = (capability: number) => hasCapability(config, capability);
 
   return (
@@ -30,7 +32,7 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               label={t("config.microphoneEnabled")}
               value={config.microphoneEnabled}
               helpContent={t("config.help.microphoneEnabled")}
-              disabled={disconnected || !supports(M61Capability.Microphone)}
+              disabled={controlsDisabled || !supports(M61Capability.Microphone)}
               onChange={(value) => bridge.setDraftField("microphoneEnabled", value)}
             />
             {config.microphoneEnabled && <div className="state-warning">{t("config.warnings.microphoneLoad")}</div>}
@@ -38,13 +40,13 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               label={t("config.speakerEnabled")}
               value={config.speakerEnabled}
               helpContent={t("config.help.speakerEnabled")}
-              disabled={disconnected || !supports(M61Capability.SpeakerGate)}
+              disabled={controlsDisabled || !supports(M61Capability.SpeakerGate)}
               onChange={(value) => bridge.setDraftField("speakerEnabled", value)}
             />
             <SelectControl
               label={t("config.speakerRoute")}
               value={config.speakerRoute}
-              disabled={disconnected || !supports(M61Capability.SpeakerRoute)}
+              disabled={controlsDisabled || !supports(M61Capability.SpeakerRoute)}
               options={[
                 [0, t("config.speakerRoutes.auto")],
                 [1, t("config.speakerRoutes.mono")],
@@ -59,7 +61,7 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               max={512}
               helpContent={t("config.help.hapticsGainQ8")}
               issue={fieldIssue(bridge.issues, "hapticsGainQ8")}
-              disabled={disconnected || !supports(M61Capability.HapticsGain)}
+              disabled={controlsDisabled || !supports(M61Capability.HapticsGain)}
               onChange={(value) => bridge.setDraftField("hapticsGainQ8", value)}
             />
           </section>
@@ -72,7 +74,7 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               max={30}
               helpContent={t("config.help.stickDeadzone")}
               issue={fieldIssue(bridge.issues, "leftStickDeadzonePercent")}
-              disabled={disconnected || !supports(M61Capability.StickDeadzone)}
+              disabled={controlsDisabled || !supports(M61Capability.StickDeadzone)}
               onChange={(value) => bridge.setDraftField("leftStickDeadzonePercent", value)}
             />
             <IntegerControl
@@ -82,13 +84,13 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               max={30}
               helpContent={t("config.help.stickDeadzone")}
               issue={fieldIssue(bridge.issues, "rightStickDeadzonePercent")}
-              disabled={disconnected || !supports(M61Capability.StickDeadzone)}
+              disabled={controlsDisabled || !supports(M61Capability.StickDeadzone)}
               onChange={(value) => bridge.setDraftField("rightStickDeadzonePercent", value)}
             />
             <SelectControl
               label={t("config.usbPollingRateMode")}
               value={config.usbPollingRateMode}
-              disabled={disconnected || !supports(M61Capability.UsbPollingRate)}
+              disabled={controlsDisabled || !supports(M61Capability.UsbPollingRate)}
               options={[
                 [0, t("config.usbPollingRates.realtime")],
                 [1, t("config.usbPollingRates.hz250")],
@@ -108,14 +110,14 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
             <SelectControl
               label={t("config.cpuGovernor")}
               value={config.cpuGovernor}
-              disabled={disconnected || !supports(M61Capability.Dvfs)}
+              disabled={controlsDisabled || !supports(M61Capability.Dvfs)}
               options={[[0, t("config.cpuGovernors.manual")], [1, t("config.cpuGovernors.realtime")]]}
               onChange={(value) => bridge.setDraftField("cpuGovernor", value as 0 | 1)}
             />
             <SelectControl
               label={t("config.cpuProfile")}
               value={config.cpuProfile}
-              disabled={disconnected || !supports(M61Capability.Dvfs)}
+              disabled={controlsDisabled || !supports(M61Capability.Dvfs)}
               options={[
                 [0, t("config.cpuProfiles.eco")],
                 [1, t("config.cpuProfiles.balanced")],
@@ -131,7 +133,7 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               max={400}
               helpContent={t("config.help.manualCpuMhz")}
               issue={fieldIssue(bridge.issues, "manualCpuMhz")}
-              disabled={disconnected || !supports(M61Capability.Dvfs) || config.cpuProfile !== 3}
+              disabled={controlsDisabled || !supports(M61Capability.Dvfs) || config.cpuProfile !== 3}
               onChange={(value) => bridge.setDraftField("manualCpuMhz", value)}
             />
             {(config.cpuGovernor !== 0 || config.cpuProfile !== 0 || config.manualCpuMhz > 320) && (
@@ -145,14 +147,14 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               label={t("config.autoReconnectEnabled")}
               value={config.autoReconnectEnabled}
               helpContent={t("config.help.autoReconnectEnabled")}
-              disabled={disconnected || !supports(M61Capability.AutoReconnect)}
+              disabled={controlsDisabled || !supports(M61Capability.AutoReconnect)}
               onChange={(value) => bridge.setDraftField("autoReconnectEnabled", value)}
             />
             <ToggleControl
               label={t("config.statusLedEnabled")}
               value={config.statusLedEnabled}
               helpContent={t("config.help.statusLedEnabled")}
-              disabled={disconnected || !supports(M61Capability.StatusLed)}
+              disabled={controlsDisabled || !supports(M61Capability.StatusLed)}
               onChange={(value) => bridge.setDraftField("statusLedEnabled", value)}
             />
             <IntegerControl
@@ -162,14 +164,14 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               max={60}
               helpContent={t("config.help.idleTimeoutMinutes")}
               issue={fieldIssue(bridge.issues, "idleTimeoutMinutes")}
-              disabled={disconnected || !supports(M61Capability.IdlePowerOff)}
+              disabled={controlsDisabled || !supports(M61Capability.IdlePowerOff)}
               onChange={(value) => bridge.setDraftField("idleTimeoutMinutes", value)}
             />
             <ToggleControl
               label={t("config.powerOffOnUsbSuspend")}
               value={config.powerOffOnUsbSuspend}
               helpContent={t("config.help.powerOffOnUsbSuspend")}
-              disabled={disconnected || !supports(M61Capability.SuspendPowerOff)}
+              disabled={controlsDisabled || !supports(M61Capability.SuspendPowerOff)}
               onChange={(value) => bridge.setDraftField("powerOffOnUsbSuspend", value)}
             />
           </section>
