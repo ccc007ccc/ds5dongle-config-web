@@ -44,3 +44,4 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./dist
           force_orphan: true
+          cname: ds5.766677.xyz

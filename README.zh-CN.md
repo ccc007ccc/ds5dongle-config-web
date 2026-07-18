@@ -9,7 +9,7 @@
 ## 使用配置器
 
 请用 Chrome、Edge 或其他 Chromium 内核浏览器打开
-<https://ccc007ccc.github.io/ds5dongle-config-web/>。WebHID 必须运行在 HTTPS
+<https://ds5.766677.xyz/>。WebHID 必须运行在 HTTPS
 页面（本地开发时也可使用 `localhost`）。
 
 1. 连接并启动 M61，点击“连接设备”，选择 M61 DualSense USB 设备。
@@ -36,8 +36,9 @@ corepack pnpm build
 ## 部署
 
 每次推送到 `master` 都会自动运行测试、构建静态页面，并把 `dist/` 发布到
-`gh-pages` 分支。GitHub Pages 从该分支根目录提供页面。正式构建的 Vite 基础路径为
-`/ds5dongle-config-web/`，本地构建仍使用 `/`。
+`gh-pages` 分支。GitHub Pages 从该分支根目录提供页面，并持续保留
+`ds5.766677.xyz` 自定义域名记录。Vite 使用相对资源地址，因此自定义域名和 GitHub
+项目页面入口都可以正常加载。
 
 参见[迁移规格](docs/M61_WEB_REFACTOR_SPEC.zh-CN.md)和
 [功能矩阵](docs/M61_FEATURE_GAP_MATRIX.zh-CN.csv)。

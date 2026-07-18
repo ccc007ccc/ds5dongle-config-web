@@ -9,7 +9,7 @@ This repository is dedicated to the M61 firmware and hardware.
 
 ## Use the configurator
 
-Open <https://ccc007ccc.github.io/ds5dongle-config-web/> in Chrome, Edge, or
+Open <https://ds5.766677.xyz/> in Chrome, Edge, or
 another Chromium-based browser. WebHID requires HTTPS (or `localhost` during
 development).
 
@@ -43,8 +43,8 @@ firmware must implement M61 management reports `0xF6` through `0xF9`.
 
 Every push to `master` runs tests, builds the static site, and publishes
 `dist/` to the `gh-pages` branch. GitHub Pages serves that branch from its
-root. The production Vite base path is `/ds5dongle-config-web/`; local builds
-continue to use `/`.
+root and preserves the `ds5.766677.xyz` custom-domain record. Vite uses
+relative asset URLs so both the custom domain and the GitHub project URL work.
 
 See [the migration specification](docs/M61_WEB_REFACTOR_SPEC.md) and
 [the feature matrix](docs/M61_FEATURE_GAP_MATRIX.csv).

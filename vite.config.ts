@@ -5,7 +5,9 @@ import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
 export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? "/ds5dongle-config-web/" : "/",
+  // Relative assets work both at the GitHub project URL and at a custom
+  // domain served from its root.
+  base: "./",
   plugins: [
     react(),
     tailwindcss(),
