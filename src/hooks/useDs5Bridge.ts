@@ -140,16 +140,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, []);
 
-  const readFirmwareVersionWithClient = useCallback(async (nextClient: Ds5BridgeHidClient) => {
-    setOperation("readingFirmware");
-    try {
-      setFirmwareVersion(await nextClient.readFirmwareVersion());
-      setError(null);
-    } finally {
-      setOperation(null);
-    }
-  }, []);
-
   const readSignalStrengthWithClient = useCallback(async (nextClient: Ds5BridgeHidClient) => {
     try {
       const nextSignalStrength = await nextClient.readSignalStrength();
@@ -172,26 +162,53 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       setOperation("connecting");
       try {
         await nextClient.open();
+        // A real wired DualSense has the same Sony VID/PID and gamepad
+        // collection. Do not expose controls until the device proves that it
+        // implements the versioned M61C management protocol.
+        const nextConfig = normalizeConfig(await nextClient.readConfig());
+        const previousClient = clientRef.current;
+
+        if (previousClient && previousClient !== nextClient) {
+          await previousClient.close();
+        }
+
         clientRef.current = nextClient;
+        configRef.current = nextConfig;
+        draftRef.current = nextConfig;
+        usbEffectivePollingRateRef.current = nextConfig.usbPollingRateMode;
         setClient(nextClient);
+        setConfig(nextConfig);
+        setDraft(nextConfig);
+        setNeedsUsbReconnect(false);
+        setSaveState("idle");
         setFirmwareVersion(null);
         setSignalStrengthRssi(null);
         setAudioActivity(null);
+        setTelemetry(null);
         setError(null);
-      } finally {
-        setOperation(null);
-      }
-      await readConfigWithClient(nextClient, true);
-      try {
-        await readFirmwareVersionWithClient(nextClient);
+
+        try {
+          setOperation("readingFirmware");
+          setFirmwareVersion(await nextClient.readFirmwareVersion());
+        } catch (cause) {
+          setFirmwareVersion(null);
+          setError(errorMessage(cause, t));
+        }
       } catch (cause) {
-        setFirmwareVersion(null);
-        setError(errorMessage(cause, t));
+        if (clientRef.current !== nextClient) {
+          try {
+            await nextClient.close();
+          } catch {
+            // Preserve the protocol error that explains why connection failed.
+          }
+        }
+        throw cause;
+      } finally {
         setOperation(null);
       }
       void readSignalStrengthWithClient(nextClient);
     },
-    [readConfigWithClient, readFirmwareVersionWithClient, readSignalStrengthWithClient, t],
+    [readSignalStrengthWithClient, t],
   );
 
   const connect = useCallback(async () => {
@@ -432,7 +449,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
 
     const handleDisconnect = (event: HIDConnectionEvent) => {
-      if (client?.device === event.device) {
+      // Use the authoritative ref so a delayed disconnect event from a
+      // previously selected device cannot clear a newly attached client.
+      if (clientRef.current?.device === event.device) {
         clientRef.current = null;
         configRef.current = null;
         draftRef.current = DEFAULT_CONFIG;
@@ -482,7 +501,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       navigator.hid?.removeEventListener("disconnect", handleDisconnect);
       navigator.hid?.removeEventListener("connect", handleConnect);
     };
-  }, [attachClient, client, refreshAuthorizedDevices, t]);
+  }, [attachClient, refreshAuthorizedDevices, t]);
 
   useEffect(() => () => {
     if (usbReconnectTimeoutRef.current !== null) {

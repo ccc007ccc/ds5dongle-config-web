@@ -21,6 +21,11 @@ development).
 4. Reconnect the controller or reset the M61 when the page says a setting
    requires it.
 
+A real wired DualSense can appear in the browser picker because M61 mirrors
+its Sony USB identity. The page keeps all controls locked until the selected
+device returns a valid versioned `M61C` configuration report; non-M61 devices
+are closed without sending configuration commands.
+
 Production defaults are intentionally conservative: microphone input is off,
 the CPU runs at 320 MHz, overclocking is off, and stick deadzones are 0%.
 Microphone decoding and overclocking materially increase load and may cause
