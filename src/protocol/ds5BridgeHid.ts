@@ -30,7 +30,6 @@ export interface AudioActivityState {
 }
 
 export interface TelemetryReport {
-  rssi: number | null;
   audioActivity: AudioActivityState | null;
   telemetry: M61Telemetry;
 }
@@ -217,7 +216,6 @@ function decodePrintableString(bytes: Uint8Array): string {
 function decodeTelemetryReport(source: ArrayBuffer | DataView | Uint8Array): TelemetryReport {
   const telemetry = decodeM61Telemetry(source);
   return {
-    rssi: telemetry.rssi,
     audioActivity: {
       speakerActive: telemetry.speakerActive,
       micActive: telemetry.microphoneActive,

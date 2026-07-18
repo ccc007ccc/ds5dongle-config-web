@@ -32,7 +32,6 @@ export interface UseDs5BridgeResult {
   client: Ds5BridgeHidClient | null;
   deviceLabel: string;
   firmwareVersion: string | null;
-  signalStrengthRssi: number | null;
   audioActivity: AudioActivityState | null;
   telemetry: M61Telemetry | null;
   authorizedDevices: HIDDevice[];
@@ -68,7 +67,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const [client, setClient] = useState<Ds5BridgeHidClient | null>(null);
   const [authorizedDevices, setAuthorizedDevices] = useState<HIDDevice[]>([]);
   const [firmwareVersion, setFirmwareVersion] = useState<string | null>(null);
-  const [signalStrengthRssi, setSignalStrengthRssi] = useState<number | null>(null);
   const [audioActivity, setAudioActivity] = useState<AudioActivityState | null>(null);
   const [telemetry, setTelemetry] = useState<M61Telemetry | null>(null);
   const [config, setConfig] = useState<ConfigBody | null>(null);
@@ -155,13 +153,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     try {
       const nextTelemetryReport = await nextClient.readTelemetry();
       if (clientRef.current === nextClient) {
-        setSignalStrengthRssi(nextTelemetryReport.rssi);
         setAudioActivity(nextTelemetryReport.audioActivity);
         setTelemetry(nextTelemetryReport.telemetry);
       }
     } catch {
       if (clientRef.current === nextClient) {
-        setSignalStrengthRssi(null);
         setAudioActivity(null);
         setTelemetry(null);
       }
@@ -193,7 +189,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         setNeedsUsbReconnect(false);
         setSaveState("idle");
         setFirmwareVersion(null);
-        setSignalStrengthRssi(null);
         setAudioActivity(null);
         setTelemetry(null);
         setError(null);
@@ -505,7 +500,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         usbEffectivePollingRateRef.current = DEFAULT_CONFIG.usbPollingRateMode;
         setClient(null);
         setFirmwareVersion(null);
-        setSignalStrengthRssi(null);
         setAudioActivity(null);
         setTelemetry(null);
         setConfig(null);
@@ -562,7 +556,6 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     client,
     deviceLabel,
     firmwareVersion,
-    signalStrengthRssi,
     audioActivity,
     telemetry,
     authorizedDevices,

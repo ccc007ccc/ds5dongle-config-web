@@ -34,9 +34,7 @@ are realtime forwarding, validated fixed 250 Hz, and validated fixed 500 Hz;
 they do not increase the Bluetooth controller's native sample rate.
 
 The supported controller target is the standard DualSense. DualSense Edge is
-not supported or hardware-qualified. Controller RSSI is intentionally shown as
-unavailable because active BL616 BR/EDR RSSI queries disturbed controller input
-during hardware tests.
+not supported or hardware-qualified.
 
 Current controls include audio routing and haptics gain, safe CPU profiles,
 manual stick deadzones, 250/500 Hz USB report modes, controller inactivity and

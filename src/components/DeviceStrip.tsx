@@ -9,7 +9,6 @@ interface DeviceStripProps {
   client: unknown | null;
   deviceLabel: string;
   firmwareVersion: string | null;
-  signalStrengthRssi: number | null;
   audioActivity: AudioActivityState | null;
   isBusy: boolean;
   supported: boolean;
@@ -22,7 +21,6 @@ export function DeviceStrip({
   client,
   deviceLabel,
   firmwareVersion,
-  signalStrengthRssi,
   audioActivity,
   isBusy,
   supported,
@@ -47,10 +45,6 @@ export function DeviceStrip({
                 <span className="device-metadata-item">
                   <span>{t("device.firmwareVersion")}</span>
                   <code>{firmwareVersion || t("device.firmwareUnknown")}</code>
-                </span>
-                <span className="device-metadata-item" title={t("device.signalStrengthTitle")}>
-                  <span>{t("device.signalStrength")}</span>
-                  <code>{formatSignalStrength(signalStrengthRssi, t)}</code>
                 </span>
                 {audioActivity && (
                   <span className="device-metadata-item device-audio-activity">
@@ -90,11 +84,4 @@ export function DeviceStrip({
       </CardContent>
     </Card>
   );
-}
-
-function formatSignalStrength(
-  signalStrengthRssi: number | null,
-  t: (key: string) => string,
-): string {
-  return signalStrengthRssi === null ? t("device.signalStrengthUnknown") : `${signalStrengthRssi} dBm`;
 }

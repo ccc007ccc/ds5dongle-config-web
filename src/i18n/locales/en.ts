@@ -23,8 +23,7 @@ export const en = {
     description: "Configuration and diagnostics for the BL616/BL618 M61 DualSense Bluetooth-to-USB firmware.",
   },
   device: {
-    label: "M61 device", none: "No device connected", firmwareVersion: "Firmware", firmwareUnknown: "Unknown", signalStrength: "Controller RSSI",
-    signalStrengthUnknown: "Unavailable", signalStrengthTitle: "M61 intentionally leaves RSSI unavailable: active BL616 BR/EDR RSSI queries disturbed controller input during hardware testing.",
+    label: "M61 device", none: "No device connected", firmwareVersion: "Firmware", firmwareUnknown: "Unknown",
     audioSpeaker: "Speaker", audioMicrophone: "Microphone", audioActive: "active", audioInactive: "inactive",
     open: "Open", openTitle: "Open the first previously authorized M61 device", connect: "Connect",
     connectTitle: "Choose the M61 DualSense HID interface",

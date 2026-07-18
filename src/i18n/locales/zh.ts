@@ -20,8 +20,7 @@ export const zh = {
     description: "用于 BL616/BL618 M61 DualSense 蓝牙转 USB 固件的配置与诊断工具。",
   },
   device: {
-    label: "M61 设备", none: "未连接设备", firmwareVersion: "固件", firmwareUnknown: "未知", signalStrength: "手柄 RSSI", signalStrengthUnknown: "不可用",
-    signalStrengthTitle: "M61当前刻意不读取RSSI：硬件测试中，BL616在活跃BR/EDR链路上查询RSSI会干扰手柄输入。", audioSpeaker: "扬声器", audioMicrophone: "麦克风",
+    label: "M61 设备", none: "未连接设备", firmwareVersion: "固件", firmwareUnknown: "未知", audioSpeaker: "扬声器", audioMicrophone: "麦克风",
     audioActive: "活跃", audioInactive: "未活跃", open: "打开", openTitle: "打开第一个已授权 M61 设备",
     connect: "连接", connectTitle: "选择 M61 DualSense HID 接口",
   },
