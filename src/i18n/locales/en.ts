@@ -11,7 +11,7 @@ export const en = {
   },
   notice: { webHidUnsupported: "Use a Chromium-based browser on HTTPS or localhost to access WebHID." },
   pwa: {
-    offlineReady: "The M61 configurator is ready for offline use.", cacheRefresh: "A new configurator version is available.",
+    offlineReady: "The M61 configurator is ready for offline use.",
     refreshCache: "Refresh page cache", refreshCacheTitle: "Clear the page cache and reload", cacheRefreshing: "Refreshing page cache",
     cacheRefreshed: "Page cache refreshed. Reloading.", cacheRefreshFailed: "Failed to refresh the page cache.",
     cacheRefreshOffline: "The page cache cannot be refreshed while offline.", cacheRefreshDeclined: "Keeping the current page version.",
@@ -23,7 +23,7 @@ export const en = {
     description: "Configuration and diagnostics for the BL616/BL618 M61 DualSense Bluetooth-to-USB firmware.",
   },
   device: {
-    label: "M61 device", firmwareVersion: "Firmware", firmwareUnknown: "Unknown", signalStrength: "Controller RSSI",
+    label: "M61 device", none: "No device connected", firmwareVersion: "Firmware", firmwareUnknown: "Unknown", signalStrength: "Controller RSSI",
     signalStrengthUnknown: "Unavailable", signalStrengthTitle: "M61 intentionally leaves RSSI unavailable: active BL616 BR/EDR RSSI queries disturbed controller input during hardware testing.",
     audioSpeaker: "Speaker", audioMicrophone: "Microphone", audioActive: "active", audioInactive: "inactive",
     open: "Open", openTitle: "Open the first previously authorized M61 device", connect: "Connect",
@@ -70,8 +70,7 @@ export const en = {
     },
   },
   actions: {
-    title: "Actions", read: "Read from M61", readTitle: "Read M61 config report 0xF7",
-    apply: "Apply to M61", applyTitle: "Apply through local report 0xF6", save: "Save to Flash",
+    title: "Actions", read: "Read from M61", readTitle: "Read M61 config report 0xF7", save: "Save to Flash",
     saveTitle: "Persist supported M61 settings", saveDirtyTitle: "Wait for changes to apply before saving",
     reconnect: "Reconnect USB", reconnectTitle: "Cycle the M61 native USB device", reconnectRequired: "USB reconnect is required for this change.",
     powerOff: "Power off controller", powerOffTitle: "Send the power-off command to the connected DualSense",

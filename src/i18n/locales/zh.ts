@@ -10,7 +10,7 @@ export const zh = {
   },
   notice: { webHidUnsupported: "请使用 Chromium 内核浏览器，并通过 HTTPS 或 localhost 访问 WebHID。" },
   pwa: {
-    offlineReady: "M61 配置器已可离线使用。", cacheRefresh: "发现新版配置器。", refreshCache: "刷新页面缓存",
+    offlineReady: "M61 配置器已可离线使用。", refreshCache: "刷新页面缓存",
     refreshCacheTitle: "清除页面缓存并重新加载", cacheRefreshing: "正在刷新页面缓存", cacheRefreshed: "页面缓存已刷新，正在重载。",
     cacheRefreshFailed: "刷新页面缓存失败。", cacheRefreshOffline: "离线状态不能刷新页面缓存。", cacheRefreshDeclined: "继续使用当前页面版本。",
     updatePromptTitle: "M61 配置器更新", updatePromptMessage: "发现新版 M61 配置器，是否立即更新？", updatePromptConfirm: "是", updatePromptCancel: "否",
@@ -20,7 +20,7 @@ export const zh = {
     description: "用于 BL616/BL618 M61 DualSense 蓝牙转 USB 固件的配置与诊断工具。",
   },
   device: {
-    label: "M61 设备", firmwareVersion: "固件", firmwareUnknown: "未知", signalStrength: "手柄 RSSI", signalStrengthUnknown: "不可用",
+    label: "M61 设备", none: "未连接设备", firmwareVersion: "固件", firmwareUnknown: "未知", signalStrength: "手柄 RSSI", signalStrengthUnknown: "不可用",
     signalStrengthTitle: "M61当前刻意不读取RSSI：硬件测试中，BL616在活跃BR/EDR链路上查询RSSI会干扰手柄输入。", audioSpeaker: "扬声器", audioMicrophone: "麦克风",
     audioActive: "活跃", audioInactive: "未活跃", open: "打开", openTitle: "打开第一个已授权 M61 设备",
     connect: "连接", connectTitle: "选择 M61 DualSense HID 接口",
@@ -65,8 +65,7 @@ export const zh = {
     },
   },
   actions: {
-    title: "操作", read: "从 M61 读取", readTitle: "读取 M61 配置报告 0xF7", apply: "应用到 M61",
-    applyTitle: "通过本地 0xF6 报告应用", save: "保存到 Flash", saveTitle: "持久化受支持的 M61 设置",
+    title: "操作", read: "从 M61 读取", readTitle: "读取 M61 配置报告 0xF7", save: "保存到 Flash", saveTitle: "持久化受支持的 M61 设置",
     saveDirtyTitle: "等待修改应用后再保存", reconnect: "重连 USB", reconnectTitle: "重启 M61 原生 USB 设备",
     reconnectRequired: "此修改需要 USB 重连后生效。", powerOff: "关闭手柄", powerOffTitle: "向当前 DualSense 发送关机命令",
     powerOffConfirm: "确定关闭当前连接的 DualSense 手柄吗？", reset: "发布默认值", resetTitle: "应用并保存 M61 发布默认值", state: "状态",

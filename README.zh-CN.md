@@ -26,6 +26,13 @@ M61复用了Sony USB身份，因此浏览器选择器中也可能出现真实的
 提醒。USB 回报模式包括实时转发、实测固定 250 Hz 和实测固定 500 Hz；固定回报不会
 提高蓝牙手柄本身的原始采样率。
 
+当前支持目标是普通DualSense；DualSense Edge未支持、也没有进行真机验收。手柄RSSI
+会明确显示为不可用，因为真机测试中BL616在活跃BR/EDR链路查询RSSI会干扰手柄输入。
+
+当前网页可配置音频路由与触觉增益、安全CPU档位、手动摇杆死区、250/500 Hz USB回报
+模式、手柄空闲和主机挂起电源策略，并提供配对/断开/忘记/关机、Flash持久化及有界诊断
+导出。网页不提供固件刷写；请按固件仓库的UART ISP文档操作。
+
 ## 本地开发与验证
 
 ```powershell
@@ -44,5 +51,5 @@ corepack pnpm build
 `ds5.766677.xyz` 自定义域名记录。Vite 使用相对资源地址，因此自定义域名和 GitHub
 项目页面入口都可以正常加载。
 
-参见[迁移规格](docs/M61_WEB_REFACTOR_SPEC.zh-CN.md)和
-[功能矩阵](docs/M61_FEATURE_GAP_MATRIX.zh-CN.csv)。
+固件源码、Release文件、接线、协议和已知限制统一维护在
+[DS5Dongle仓库](https://github.com/ccc007ccc/DS5Dongle)。

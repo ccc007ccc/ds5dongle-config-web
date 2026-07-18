@@ -163,6 +163,13 @@ export function configsEqual(left: ConfigBody | null, right: ConfigBody | null):
   );
 }
 
+export function usesElevatedCpuPerformance(config: ConfigBody): boolean {
+  return config.cpuGovernor !== 0 ||
+    config.cpuProfile === 1 ||
+    config.cpuProfile === 2 ||
+    (config.cpuProfile === 3 && config.manualCpuMhz > 320);
+}
+
 export function fieldIssue(
   issues: ConfigValidationIssue[],
   field: keyof ConfigBody,

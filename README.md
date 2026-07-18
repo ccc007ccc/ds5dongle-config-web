@@ -33,6 +33,17 @@ stutter, so the UI displays warnings before enabling them. USB report modes
 are realtime forwarding, validated fixed 250 Hz, and validated fixed 500 Hz;
 they do not increase the Bluetooth controller's native sample rate.
 
+The supported controller target is the standard DualSense. DualSense Edge is
+not supported or hardware-qualified. Controller RSSI is intentionally shown as
+unavailable because active BL616 BR/EDR RSSI queries disturbed controller input
+during hardware tests.
+
+Current controls include audio routing and haptics gain, safe CPU profiles,
+manual stick deadzones, 250/500 Hz USB report modes, controller inactivity and
+host-suspend power policies, pairing/disconnect/forget/power-off actions,
+Flash persistence, and bounded diagnostics export. Browser firmware flashing
+is not provided; use the firmware repository's UART ISP instructions.
+
 ## Local development and validation
 
 ```powershell
@@ -51,5 +62,5 @@ Every push to `master` runs tests, builds the static site, and publishes
 root and preserves the `ds5.766677.xyz` custom-domain record. Vite uses
 relative asset URLs so both the custom domain and the GitHub project URL work.
 
-See [the migration specification](docs/M61_WEB_REFACTOR_SPEC.md) and
-[the feature matrix](docs/M61_FEATURE_GAP_MATRIX.csv).
+Firmware source, release files, wiring, protocol details, and limitations are
+maintained in the [DS5Dongle repository](https://github.com/ccc007ccc/DS5Dongle).

@@ -4,7 +4,15 @@ import {
   decodeConfigBody,
   encodeConfigBody,
 } from "./config";
-import { decodeM61Telemetry, type M61Telemetry } from "./m61Management";
+import {
+  M61_COMMAND_REPORT_ID,
+  M61_CONFIG_REPORT_ID,
+  M61_FIRMWARE_REPORT_ID,
+  M61_TELEMETRY_REPORT_ID,
+  M61Command,
+  decodeM61Telemetry,
+  type M61Telemetry,
+} from "./m61Management";
 
 export const SONY_VENDOR_ID = 0x054c;
 export const SUPPORTED_PRODUCT_IDS = [0x0ce6] as const;
@@ -13,17 +21,6 @@ export const WEBHID_UNAVAILABLE_ERROR = "webHidUnavailable";
 
 const GENERIC_DESKTOP_USAGE_PAGE = 0x01;
 const GAMEPAD_USAGE = 0x05;
-const REPORT_SET_CONFIG = 0xf6;
-const REPORT_GET_CONFIG = 0xf7;
-const REPORT_GET_FIRMWARE_VERSION = 0xf8;
-const REPORT_GET_SIGNAL_STRENGTH = 0xf9;
-const CMD_UPDATE_CONFIG = 0x01;
-const CMD_SAVE_TO_FLASH = 0x02;
-const CMD_RECONNECT_USB = 0x03;
-const CMD_POWER_OFF_CONTROLLER = 0x04;
-const CMD_PAIR_CONTROLLER = 0x05;
-const CMD_DISCONNECT_CONTROLLER = 0x06;
-const CMD_FORGET_CONTROLLER = 0x07;
 const MANAGEMENT_RESULT_TIMEOUT_MS = 1_500;
 const MANAGEMENT_RESULT_POLL_MS = 50;
 
@@ -32,7 +29,7 @@ export interface AudioActivityState {
   micActive: boolean;
 }
 
-export interface SignalStrengthReport {
+export interface TelemetryReport {
   rssi: number | null;
   audioActivity: AudioActivityState | null;
   telemetry: M61Telemetry;
@@ -87,67 +84,70 @@ export class Ds5BridgeHidClient {
 
   async readConfig(): Promise<ConfigBody> {
     await this.open();
-    const report = await this.device.receiveFeatureReport(REPORT_GET_CONFIG);
+    const report = await this.device.receiveFeatureReport(M61_CONFIG_REPORT_ID);
     return decodeConfigBody(report);
   }
 
   async readFirmwareVersion(): Promise<string> {
     await this.open();
-    const report = await this.device.receiveFeatureReport(REPORT_GET_FIRMWARE_VERSION);
+    const report = await this.device.receiveFeatureReport(M61_FIRMWARE_REPORT_ID);
     return decodeFirmwareVersion(report);
   }
 
-  async readSignalStrength(): Promise<SignalStrengthReport> {
+  async readTelemetry(): Promise<TelemetryReport> {
     await this.open();
-    const report = await this.device.receiveFeatureReport(REPORT_GET_SIGNAL_STRENGTH);
-    return decodeSignalStrength(report);
+    const report = await this.device.receiveFeatureReport(M61_TELEMETRY_REPORT_ID);
+    return decodeTelemetryReport(report);
   }
 
   async applyConfig(config: ConfigBody): Promise<void> {
     await this.open();
     const body = encodeConfigBody(config);
-    const report = commandReport(CMD_UPDATE_CONFIG);
+    const report = commandReport(M61Command.ApplyConfig);
     report.set(body, 1);
-    await this.sendManagedCommand(CMD_UPDATE_CONFIG, report);
+    await this.sendManagedCommand(M61Command.ApplyConfig, report);
   }
 
   async saveToFlash(): Promise<void> {
     await this.open();
-    await this.sendManagedCommand(CMD_SAVE_TO_FLASH);
+    await this.sendManagedCommand(M61Command.SaveConfig);
   }
 
   async reconnectUsb(): Promise<void> {
     await this.open();
-    await this.device.sendFeatureReport(REPORT_SET_CONFIG, commandReport(CMD_RECONNECT_USB));
+    await this.device.sendFeatureReport(
+      M61_COMMAND_REPORT_ID,
+      commandReport(M61Command.ReconnectUsb),
+    );
   }
 
   async powerOffController(): Promise<void> {
     await this.open();
-    await this.sendManagedCommand(CMD_POWER_OFF_CONTROLLER);
+    await this.sendManagedCommand(M61Command.PowerOffController);
   }
 
   async pairController(): Promise<void> {
     await this.open();
-    await this.sendManagedCommand(CMD_PAIR_CONTROLLER);
+    await this.sendManagedCommand(M61Command.PairController);
   }
 
   async disconnectController(): Promise<void> {
     await this.open();
-    await this.sendManagedCommand(CMD_DISCONNECT_CONTROLLER);
+    await this.sendManagedCommand(M61Command.DisconnectController);
   }
 
   async forgetController(): Promise<void> {
     await this.open();
-    await this.sendManagedCommand(CMD_FORGET_CONTROLLER);
+    await this.sendManagedCommand(M61Command.ForgetController);
   }
 
   private async sendManagedCommand(command: number, report = commandReport(command)): Promise<void> {
-    const before = await this.readSignalStrength();
-    await this.device.sendFeatureReport(REPORT_SET_CONFIG, report);
+    const before = await this.readTelemetry();
+    await this.device.sendFeatureReport(M61_COMMAND_REPORT_ID, report);
     const deadline = performance.now() + MANAGEMENT_RESULT_TIMEOUT_MS;
 
     while (performance.now() < deadline) {
-      const result = await this.readSignalStrength();
+      const result = await this.readTelemetry();
       if (result.telemetry.managementSequence !== before.telemetry.managementSequence &&
           result.telemetry.lastManagementCommand === command) {
         if (result.telemetry.lastManagementError !== 0) {
@@ -168,11 +168,7 @@ export function webHidAvailable(): boolean {
   return typeof navigator !== "undefined" && Boolean(navigator.hid);
 }
 
-export function getDeviceLabel(device: HIDDevice | null): string {
-  if (!device) {
-    return "No device";
-  }
-
+export function getDeviceLabel(device: HIDDevice): string {
   const productId = device.productId.toString(16).padStart(4, "0").toUpperCase();
   return `${device.productName || "M61 DualSense Dongle"} · 054C:${productId}`;
 }
@@ -199,7 +195,7 @@ function decodeFirmwareVersion(source: ArrayBuffer | DataView | Uint8Array): str
   const bytes = trimTrailingZeros(toUint8Array(source));
   const candidates = [bytes];
 
-  if (bytes[0] === REPORT_GET_FIRMWARE_VERSION) {
+  if (bytes[0] === M61_FIRMWARE_REPORT_ID) {
     candidates.push(bytes.slice(1));
   }
 
@@ -218,7 +214,7 @@ function decodePrintableString(bytes: Uint8Array): string {
   return /^[\x20-\x7e]+$/.test(text) ? text : "";
 }
 
-function decodeSignalStrength(source: ArrayBuffer | DataView | Uint8Array): SignalStrengthReport {
+function decodeTelemetryReport(source: ArrayBuffer | DataView | Uint8Array): TelemetryReport {
   const telemetry = decodeM61Telemetry(source);
   return {
     rssi: telemetry.rssi,

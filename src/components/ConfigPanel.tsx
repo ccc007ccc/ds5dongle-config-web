@@ -3,7 +3,7 @@ import { Cpu, Gamepad2, Radio, Volume2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UseDs5BridgeResult } from "../hooks/useDs5Bridge";
-import { fieldIssue, hasCapability } from "../protocol/config";
+import { fieldIssue, hasCapability, usesElevatedCpuPerformance } from "../protocol/config";
 import { M61Capability } from "../protocol/m61Management";
 import { IntegerControl } from "./config/IntegerControl";
 import { ToggleControl } from "./config/ToggleControl";
@@ -136,7 +136,7 @@ export function ConfigPanel({ bridge }: { bridge: UseDs5BridgeResult }) {
               disabled={controlsDisabled || !supports(M61Capability.Dvfs) || config.cpuProfile !== 3}
               onChange={(value) => bridge.setDraftField("manualCpuMhz", value)}
             />
-            {(config.cpuGovernor !== 0 || config.cpuProfile !== 0 || config.manualCpuMhz > 320) && (
+            {usesElevatedCpuPerformance(config) && (
               <div className="state-warning">{t("config.warnings.overclock")}</div>
             )}
           </section>

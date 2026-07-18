@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { en } from "../i18n/locales/en.ts";
 import { zh } from "../i18n/locales/zh.ts";
-import { DEFAULT_CONFIG, releaseDefaultsForDevice } from "./config.ts";
+import { DEFAULT_CONFIG, releaseDefaultsForDevice, usesElevatedCpuPerformance } from "./config.ts";
 import {
   M61Capability,
   M61Command,
@@ -81,6 +81,14 @@ test("release defaults preserve fields hidden by device capabilities", () => {
   assert.equal(defaults.cpuProfile, current.cpuProfile);
   assert.equal(defaults.manualCpuMhz, current.manualCpuMhz);
   assert.equal(defaults.usbPollingRateMode, current.usbPollingRateMode);
+});
+
+test("performance warning follows the effective CPU profile", () => {
+  assert.equal(usesElevatedCpuPerformance({ ...DEFAULT_CONFIG, manualCpuMhz: 400 }), false);
+  assert.equal(usesElevatedCpuPerformance({ ...DEFAULT_CONFIG, cpuProfile: 3 }), false);
+  assert.equal(usesElevatedCpuPerformance({ ...DEFAULT_CONFIG, cpuProfile: 3, manualCpuMhz: 384 }), true);
+  assert.equal(usesElevatedCpuPerformance({ ...DEFAULT_CONFIG, cpuProfile: 1 }), true);
+  assert.equal(usesElevatedCpuPerformance({ ...DEFAULT_CONFIG, cpuGovernor: 1 }), true);
 });
 
 test("an unrelated legacy config is rejected by magic", () => {

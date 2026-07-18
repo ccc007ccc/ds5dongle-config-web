@@ -8,6 +8,7 @@ import {
   configsEqual,
   normalizeConfig,
   releaseDefaultsForDevice,
+  usesElevatedCpuPerformance,
   validateConfig,
 } from "../protocol/config";
 import {
@@ -22,7 +23,7 @@ import type { M61Telemetry } from "../protocol/m61Management";
 
 type Operation = "connecting" | "reading" | "readingFirmware" | "applying" | "saving" | "reconnecting" | "poweringOff" | "pairing" | "disconnectingController" | "forgettingController" | null;
 type SaveState = "idle" | "dirty" | "applied" | "saved";
-const SIGNAL_STRENGTH_REFRESH_INTERVAL_MS = 5_000;
+const TELEMETRY_REFRESH_INTERVAL_MS = 5_000;
 const USB_RECONNECT_TIMEOUT_MS = 12_000;
 const USB_RECONNECT_TIMEOUT_ERROR = "usbReconnectTimedOut";
 
@@ -93,7 +94,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
   const isConnected = Boolean(client?.device.opened);
   const isDirty = !configsEqual(config, draft);
   const isDefaultConfig = configsEqual(draft, deviceDefaults);
-  const deviceLabel = getDeviceLabel(client?.device ?? null);
+  const deviceLabel = client ? getDeviceLabel(client.device) : t("device.none");
 
   const statusText = useMemo(() => {
     if (!supported) {
@@ -150,13 +151,13 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
   }, []);
 
-  const readSignalStrengthWithClient = useCallback(async (nextClient: Ds5BridgeHidClient) => {
+  const readTelemetryWithClient = useCallback(async (nextClient: Ds5BridgeHidClient) => {
     try {
-      const nextSignalStrength = await nextClient.readSignalStrength();
+      const nextTelemetryReport = await nextClient.readTelemetry();
       if (clientRef.current === nextClient) {
-        setSignalStrengthRssi(nextSignalStrength.rssi);
-        setAudioActivity(nextSignalStrength.audioActivity);
-        setTelemetry(nextSignalStrength.telemetry);
+        setSignalStrengthRssi(nextTelemetryReport.rssi);
+        setAudioActivity(nextTelemetryReport.audioActivity);
+        setTelemetry(nextTelemetryReport.telemetry);
       }
     } catch {
       if (clientRef.current === nextClient) {
@@ -221,9 +222,9 @@ export function useDs5Bridge(): UseDs5BridgeResult {
       } finally {
         setOperation(null);
       }
-      void readSignalStrengthWithClient(nextClient);
+      void readTelemetryWithClient(nextClient);
     },
-    [readSignalStrengthWithClient, t],
+    [readTelemetryWithClient, t],
   );
 
   const connect = useCallback(async () => {
@@ -326,7 +327,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     if (!client || isDirty) {
       return;
     }
-    const riskyPerformance = draft.microphoneEnabled || draft.cpuGovernor !== 0 || draft.cpuProfile !== 0;
+    const riskyPerformance = draft.microphoneEnabled || usesElevatedCpuPerformance(draft);
     if (riskyPerformance && !window.confirm(t("actions.savePerformanceConfirm"))) return;
 
     setOperation("saving");
@@ -397,7 +398,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     try {
       await command(client);
       setError(null);
-      window.setTimeout(() => void readSignalStrengthWithClient(client), 500);
+      window.setTimeout(() => void readTelemetryWithClient(client), 500);
     } catch (cause) {
       setError(errorMessage(cause, t));
     } finally {
@@ -405,7 +406,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         setOperation(null);
       }
     }
-  }, [client, readSignalStrengthWithClient, t]);
+  }, [client, readTelemetryWithClient, t]);
 
   const pairController = useCallback(() =>
     runControllerCommand("pairing", (activeClient) => activeClient.pairController()), [runControllerCommand]);
@@ -483,11 +484,11 @@ export function useDs5Bridge(): UseDs5BridgeResult {
     }
 
     const intervalId = window.setInterval(() => {
-      void readSignalStrengthWithClient(client);
-    }, SIGNAL_STRENGTH_REFRESH_INTERVAL_MS);
+      void readTelemetryWithClient(client);
+    }, TELEMETRY_REFRESH_INTERVAL_MS);
 
     return () => window.clearInterval(intervalId);
-  }, [client, readSignalStrengthWithClient]);
+  }, [client, readTelemetryWithClient]);
 
   useEffect(() => {
     if (!navigator.hid) {
