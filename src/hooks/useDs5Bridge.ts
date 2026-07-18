@@ -159,6 +159,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
 
   const attachClient = useCallback(
     async (nextClient: Ds5BridgeHidClient) => {
+      const previousClient = clientRef.current;
       setOperation("connecting");
       try {
         await nextClient.open();
@@ -166,9 +167,8 @@ export function useDs5Bridge(): UseDs5BridgeResult {
         // collection. Do not expose controls until the device proves that it
         // implements the versioned M61C management protocol.
         const nextConfig = normalizeConfig(await nextClient.readConfig());
-        const previousClient = clientRef.current;
 
-        if (previousClient && previousClient !== nextClient) {
+        if (previousClient && previousClient.device !== nextClient.device) {
           await previousClient.close();
         }
 
@@ -195,7 +195,7 @@ export function useDs5Bridge(): UseDs5BridgeResult {
           setError(errorMessage(cause, t));
         }
       } catch (cause) {
-        if (clientRef.current !== nextClient) {
+        if (!previousClient || previousClient.device !== nextClient.device) {
           try {
             await nextClient.close();
           } catch {
