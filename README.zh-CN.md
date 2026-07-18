@@ -40,4 +40,4 @@ corepack pnpm build
 `/ds5dongle-config-web/`，本地构建仍使用 `/`。
 
 参见[迁移规格](docs/M61_WEB_REFACTOR_SPEC.zh-CN.md)和
-[功能矩阵](docs/M61_FEATURE_GAP_MATRIX.csv)。
+[功能矩阵](docs/M61_FEATURE_GAP_MATRIX.zh-CN.csv)。

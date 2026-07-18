@@ -1,6 +1,6 @@
 id,area,capability,firmware_status,web_status,target,priority,acceptance
 transport,protocol,WebHID connection,implemented,implemented,M61 device negotiation,P0,M61C config report is required before controls unlock
-config_read,protocol,Read report 0xF7,schema v4 implemented pending hardware validation,implemented,versioned M61 config,P0,hardware returns schema v4 and Web fixture matches
+config_read,protocol,Read report 0xF7,schema v4 implemented and hardware validated,implemented,versioned M61 config,P0,hardware returns schema v4 and Web fixture matches
 config_apply,protocol,Apply command 0xF6/0x01,implemented and hardware validated,implemented,all advertised capabilities apply atomically,P0,write and readback match on hardware
 config_save,protocol,Save command 0xF6/0x02,CRC record implemented and reset validated,implemented,one CRC-protected M61 record,P0,power-cycle restores every advertised field
 stick_deadzone,input,Independent radial stick deadzones,schema v3 implemented,implemented,left and right 0-30 percent scaled radial correction,P1,center drift is removed while direction and full travel remain intact after reset
